@@ -1,16 +1,16 @@
 from pydantic import BaseModel
 
-class Message(BaseModel):
+class ChatMessage(BaseModel):
     role: str = 'user'
     content: str
 
-class Request(BaseModel):
+class ChatRequest(BaseModel):
     model: str = 'gpt-3.5-turbo'
-    messages: list[Message]
+    messages: list[ChatMessage]
 
 class Choice(BaseModel):
     index: int
-    message: Message
+    message: ChatMessage
     finish_reason: str
 
 class Usage(BaseModel):
@@ -18,9 +18,31 @@ class Usage(BaseModel):
     completion_tokens: int
     total_tokens: int
 
-class Response(BaseModel):
+class ChatResponse(BaseModel):
     id: str
     object: str
     created: int
     choices: list[Choice]
     usage: Usage
+
+class ImageRequest(BaseModel):
+    prompt: str
+    n: int = 1
+    size: str = '1024x1024'
+    response_format: str = 'url'
+
+class Url(BaseModel):
+    url: str
+
+class ImageResponse(BaseModel):
+    created: int
+    data: list[Url]
+
+class Error(BaseModel):
+    code: str | None
+    message: str
+    param: str | None
+    type: str
+
+class ErrorResponse(BaseModel):
+    error: Error
