@@ -1,0 +1,45 @@
+site_name: Simple Openai
+site_description: A simple openai api
+site_author: Stephen Schleising
+
+# Repository
+repo_name: schleising/simple-openai
+repo_url: https://github.com/schleising/simple-openai
+
+# Theme
+theme:
+  name: material
+  language: en
+  palette:
+    primary: teal
+    accent: teal
+  font:
+    text: Roboto
+    code: Roboto Mono
+  features:
+    - navigation.footer
+
+
+plugins:
+  - search
+  - mkdocstrings
+
+# Extensions
+markdown_extensions:
+  - toc:
+      permalink: true
+  - admonition
+  - pymdownx.highlight
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+# Pages
+nav:
+  - Home: index.md
+  - Reference:
+    - SimpleOpenai: simple_openai/simple_openai.md
+    - AsyncSimpleOpenai: simple_openai/async_simple_openai.md
+    - SimpleOpenaiResponse: simple_openai/responses.md
