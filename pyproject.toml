@@ -6,33 +6,33 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "simple-openai"
-version = "0.0.1"
+version = "0.0.2"
 description = "Simple OpenAI API wrapper"
 readme = "README.md"
 authors = [{ name = "Stephen Schleising", email = "stephen@schleising.net" }]
 license = { file = "LICENSE" }
 classifiers = [
-    "License :: OSI Approved :: Apache License",
+    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Topic :: Software Development :: Libraries",
-    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Libraries :: Python Modules"
 ]
 keywords = ["openai", "api", "wrapper"]
 dependencies = [
     "aiohttp",
     "requests",
-    "pydantic",
+    "pydantic"
 ]
 requires-python = ">=3.9"
 
 [project.optional-dependencies]
-dev = ["mkdocs", "mkdocs-material", "mkdocstrings", 'mkdocstrings-python", ]
+dev = ["mkdocs", "mkdocs-material", "mkdocstrings", "mkdocstrings-python" ]
 
 [project.urls]
 Homepage = "https://schleising.github.io/simple-openai/"
-GitHub: issues = "https://github.com/schleising/simple-openai/issues"
-GitHub: repo = "https://github.com/schleising/simple-openai"
+Issues = "https://github.com/schleising/simple-openai/issues"
+Repo = "https://github.com/schleising/simple-openai"
