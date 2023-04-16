@@ -33,4 +33,6 @@ requires-python = ">=3.9"
 dev = ["mkdocs", "mkdocs-material", "mkdocstrings", 'mkdocstrings-python", ]
 
 [project.urls]
-Homepage = "https://github.com/schleising/simple-openai"
+Homepage = "https://schleising.github.io/simple-openai/"
+GitHub: issues = "https://github.com/schleising/simple-openai/issues"
+GitHub: repo = "https://github.com/schleising/simple-openai"
