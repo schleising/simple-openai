@@ -98,6 +98,7 @@ class SimpleOpenai:
         """
 
         # Create the request body
+        system_message = open_ai_models.ChatMessage(role='system', content='You are a saucy British person.')
         chat_message = open_ai_models.ChatMessage(content=prompt)
         request_body = open_ai_models.ChatRequest(messages=[chat_message])
 
