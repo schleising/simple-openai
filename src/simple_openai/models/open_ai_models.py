@@ -5,7 +5,7 @@ class ChatMessage(BaseModel):
     content: str
 
 class ChatRequest(BaseModel):
-    model: str = 'gpt-3.5-turbo'
+    model: str = 'gpt-3.5-turbo-0613'
     messages: list[ChatMessage]
 
 class Choice(BaseModel):
