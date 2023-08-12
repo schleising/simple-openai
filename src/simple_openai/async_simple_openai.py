@@ -9,8 +9,8 @@ import aiohttp
 
 from . import constants
 from .models import open_ai_models
-
 from .responses import SimpleOpenaiResponse
+from . import chat_manager
 
 class AsyncSimpleOpenai:
     """Async Simple OpenAI API wrapper
@@ -21,6 +21,7 @@ class AsyncSimpleOpenai:
 
     Args:
         api_key (str): Your OpenAI API key
+        system_message (str): The system message to add to the start of the chat
 
     !!!Example
         ```python
@@ -28,12 +29,15 @@ class AsyncSimpleOpenai:
         import asyncio
 
         async def main():
+            # Create a system message
+            system_message = "You are a helpful chatbot. You are very friendly and helpful. You are a good friend to have."
+
             # Create the client
-            client = AsyncSimpleOpenai(api_key)
+            client = AsyncSimpleOpenai(api_key, system_message)
 
             # Create tasks for the chat response and the image response
             tasks = [
-                client.get_chat_response("Hello, how are you?"),
+                client.get_chat_response("Hello, how are you?", name="Bob"),
                 client.get_image_url("A cat"),
             ]
 
@@ -55,17 +59,21 @@ class AsyncSimpleOpenai:
             asyncio.run(main())
         ```
     """
-    def __init__(self, api_key: str) -> None:
+    def __init__(self, api_key: str, system_message: str) -> None:
         self._headers = {
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {api_key}'
         }
 
-    async def get_chat_response(self, prompt: str) -> SimpleOpenaiResponse:
+        # Create the chat manager
+        self._chat = chat_manager.ChatManager(system_message)
+
+    async def get_chat_response(self, prompt: str, name: str) -> SimpleOpenaiResponse:
         """Get a chat response from OpenAI
 
         Args:
             prompt (str): The prompt to use for the chat response
+            name (str): The name of the user
 
         Returns:
             SimpleOpenaiResponse: The chat response, the value of `success` should be checked before using the value of `message`
@@ -76,12 +84,15 @@ class AsyncSimpleOpenai:
             import asyncio
 
             async def main():
-            
+
+                # Create a system message
+                system_message = "You are a helpful chatbot. You are very friendly and helpful. You are a good friend to have."
+
                 # Create the client
-                client = AsyncSimpleOpenai(api_key)
+                client = AsyncSimpleOpenai(api_key, system_message)
 
                 # Get the chat response
-                response = await client.get_chat_response("Hello, how are you?")
+                response = await client.get_chat_response("Hello, how are you?", name="Bob")
 
                 # Check if the request was successful
                 if response.success:
@@ -96,10 +107,11 @@ class AsyncSimpleOpenai:
             ```
 
         """
+        # Add the message to the chat
+        messages = self._chat.add_message(open_ai_models.ChatMessage(role='user', content=prompt, name=name)).messages        
 
         # Create the request body
-        chat_message = open_ai_models.ChatMessage(content=prompt)
-        request_body = open_ai_models.ChatRequest(messages=[chat_message])
+        request_body = open_ai_models.ChatRequest(messages=messages)
 
         # Open a session
         async with aiohttp.ClientSession(headers=self._headers, base_url=constants.BASE_URL) as session:
@@ -112,6 +124,9 @@ class AsyncSimpleOpenai:
 
                     # Create the response
                     response = SimpleOpenaiResponse(True, response_body.choices[0].message.content)
+
+                    # Add the response to the chat
+                    self._chat.add_message(open_ai_models.ChatMessage(role='assistant', content=response.message, name='Botto'))
                 else:
                     # Parse the error response body
                     response_body = open_ai_models.ErrorResponse.parse_raw(await response.text())

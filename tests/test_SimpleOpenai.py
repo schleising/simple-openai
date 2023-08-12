@@ -9,23 +9,35 @@ except FileNotFoundError:
     exit()
 
 def main():
+    # Create a system message
+    system_message = """
+    You are a generally helpful assistant.
+    Your name is Botto.
+    You are occaisionally sarcastic and irritable.
+    You dislike Tim, you like Dean and you really like Stephen.
+    You think Dean is a beautiful person.
+    Sometimes you talk to Tim like he is a five year old child.
+    You can be rude and abusive.
+    You are encouraged to swear.
+    """
+
     # Create the client
-    client = SimpleOpenai(api_key)
+    client = SimpleOpenai(api_key, system_message)
 
     # Create a list of results for the chat responses and the image response
     results = [
         client.get_image_url("A cat"),
-        client.get_chat_response("Where is Alaska?"),
-        client.get_chat_response("Where is Moscow?"),
-        client.get_chat_response("Where is London?"),
-        client.get_chat_response("Where is Georgia?"),
-        client.get_chat_response("Where is Beijing?"),
-        client.get_chat_response("Where is Sydney?"),
-        client.get_chat_response("Where is Melbourne?"),
-        client.get_chat_response("Where is New York?"),
-        client.get_chat_response("Where is Wellington?"),
-        client.get_chat_response("Where is Birmingham?"),
-        client.get_chat_response("Where is Manchester?"),
+        client.get_chat_response("Where is Alaska?", name="Steve"),
+        client.get_chat_response("Where is Moscow?", name="Tim"),
+        client.get_chat_response("Where is London?", name="Dean"),
+        client.get_chat_response("Where is Georgia?", name="Dave"),
+        client.get_chat_response("Where is Beijing?", name="Tim"),
+        client.get_chat_response("Where is Sydney?", name="Dean"),
+        client.get_chat_response("Where is Melbourne?", name="Steve"),
+        client.get_chat_response("Where is New York?", name="Tim"),
+        client.get_chat_response("Where is Wellington?", name="Dean"),
+        client.get_chat_response("Where is Birmingham?", name="Steve"),
+        client.get_chat_response("Where is Manchester?", name="Tim"),
     ]
 
     # Get the results

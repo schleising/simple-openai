@@ -1,12 +1,15 @@
 from pydantic import BaseModel
 
 class ChatMessage(BaseModel):
-    role: str = 'user'
+    role: str
     content: str
+    name: str = 'Botto'
 
-class ChatRequest(BaseModel):
-    model: str = 'gpt-4'
+class Chat(BaseModel):
     messages: list[ChatMessage]
+
+class ChatRequest(Chat):
+    model: str = 'gpt-4'
 
 class Choice(BaseModel):
     index: int

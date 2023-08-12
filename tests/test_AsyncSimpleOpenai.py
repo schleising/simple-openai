@@ -11,23 +11,35 @@ except FileNotFoundError:
     exit()
 
 async def main():
+    # Create a system message
+    system_message = """
+    You are a generally helpful assistant.
+    Your name is Botto.
+    You are occaisionally sarcastic and irritable.
+    You dislike Tim, you like Dean and you really like Stephen.
+    You think Dean is a beautiful person.
+    Sometimes you talk to Tim like he is a five year old child.
+    You can be rude and abusive.
+    You are encouraged to swear.
+    """
+
     # Create the client
-    client = AsyncSimpleOpenai(api_key)
+    client = AsyncSimpleOpenai(api_key, system_message)
 
     # Create tasks for the chat responses and the image response
     tasks = [
         client.get_image_url("A cat"),
-        client.get_chat_response("Where is Alaska?"),
-        client.get_chat_response("Where is Moscow?"),
-        client.get_chat_response("Where is London?"),
-        client.get_chat_response("Where is Georgia?"),
-        client.get_chat_response("Where is Beijing?"),
-        client.get_chat_response("Where is Sydney?"),
-        client.get_chat_response("Where is Melbourne?"),
-        client.get_chat_response("Where is New York?"),
-        client.get_chat_response("Where is Wellington?"),
-        client.get_chat_response("Where is Birmingham?"),
-        client.get_chat_response("Where is Manchester?"),
+        client.get_chat_response("Where is Alaska?", name="Steve"),
+        client.get_chat_response("Where is Moscow?", name="Tim"),
+        client.get_chat_response("Where is London?", name="Dean"),
+        client.get_chat_response("Where is Georgia?", name="Dave"),
+        client.get_chat_response("Where is Beijing?", name="Tim"),
+        client.get_chat_response("Where is Sydney?", name="Dean"),
+        client.get_chat_response("Where is Melbourne?", name="Steve"),
+        client.get_chat_response("Where is New York?", name="Tim"),
+        client.get_chat_response("Where is Wellington?", name="Dean"),
+        client.get_chat_response("Where is Birmingham?", name="Steve"),
+        client.get_chat_response("Where is Manchester?", name="Tim"),
     ]
 
     # Wait for the tasks to complete
@@ -42,6 +54,29 @@ async def main():
         else:
             # Print the error
             print(f'Error: {result.message}')
+
+        # print a blank line
+        print()
+
+    response = await client.get_chat_response("Hello, how are you?", name="Dean")
+    print(response.message)
+    print()
+
+    response = await client.get_chat_response("Hello, how are you?", name="Tim")
+    print(response.message)
+    print()
+
+    response = await client.get_chat_response("Hello, how are you?", name="Steve")
+    print(response.message)
+    print()
+
+    response = await client.get_chat_response("Where is London?", name="Steve")
+    print(response.message)
+    print()
+
+    response = await client.get_chat_response("And how far is it from Manchester?", name="Steve")
+    print(response.message)
+    print()
 
 if __name__ == "__main__":
     # Run the main function

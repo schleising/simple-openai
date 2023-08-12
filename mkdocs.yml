@@ -43,3 +43,4 @@ nav:
     - SimpleOpenai: simple_openai/simple_openai.md
     - AsyncSimpleOpenai: simple_openai/async_simple_openai.md
     - SimpleOpenaiResponse: simple_openai/responses.md
+    - ChatManager: simple_openai/chat_manager.md
