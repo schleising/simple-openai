@@ -17,7 +17,7 @@
         <link rel="next" href="simple_openai/simple_openai/">
       
       <link rel="icon" href="assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.6">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.19">
     
     
       
@@ -25,10 +25,10 @@
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.ded33207.min.css">
+      <link rel="stylesheet" href="assets/stylesheets/main.eebd395e.min.css">
       
         
-        <link rel="stylesheet" href="assets/stylesheets/palette.a0c5b2b5.min.css">
+        <link rel="stylesheet" href="assets/stylesheets/palette.ecc896b0.min.css">
       
       
 
@@ -112,6 +112,8 @@
         </div>
       </div>
     </div>
+    
+      
     
     
     
@@ -369,6 +371,20 @@
 
             
           
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="simple_openai/chat_manager/" class="md-nav__link">
+        ChatManager
+      </a>
+    </li>
+  
+
+            
+          
         </ul>
       </nav>
     </li>
@@ -475,11 +491,14 @@
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">simple_openai</span> <span class="kn">import</span> <span class="n">SimpleOpenai</span>
 
 <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="c1"># Create a system message</span>
+    <span class="n">system_message</span> <span class="o">=</span> <span class="s2">&quot;You are a helpful chatbot. You are very friendly and helpful. You are a good friend to have.&quot;</span>
+
     <span class="c1"># Create the client</span>
-    <span class="n">client</span> <span class="o">=</span> <span class="n">SimpleOpenai</span><span class="p">(</span><span class="n">api_key</span><span class="p">)</span>
+    <span class="n">client</span> <span class="o">=</span> <span class="n">SimpleOpenai</span><span class="p">(</span><span class="n">api_key</span><span class="p">,</span> <span class="n">system_message</span><span class="p">)</span>
 
     <span class="c1"># Create tasks for the chat response and the image response</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_chat_response</span><span class="p">(</span><span class="s2">&quot;Hello, how are you?&quot;</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_chat_response</span><span class="p">(</span><span class="s2">&quot;Hello, how are you?&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Bob&quot;</span><span class="p">)</span>
 
     <span class="c1"># Print the result</span>
     <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
@@ -511,12 +530,15 @@
 <span class="kn">import</span> <span class="nn">asyncio</span>
 
 <span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="c1"># Create a system message</span>
+    <span class="n">system_message</span> <span class="o">=</span> <span class="s2">&quot;You are a helpful chatbot. You are very friendly and helpful. You are a good friend to have.&quot;</span>
+
     <span class="c1"># Create the client</span>
-    <span class="n">client</span> <span class="o">=</span> <span class="n">AsyncSimpleOpenai</span><span class="p">(</span><span class="n">api_key</span><span class="p">)</span>
+    <span class="n">client</span> <span class="o">=</span> <span class="n">AsyncSimpleOpenai</span><span class="p">(</span><span class="n">api_key</span><span class="p">,</span> <span class="n">system_message</span><span class="p">)</span>
 
     <span class="c1"># Create tasks for the chat response and the image response</span>
     <span class="n">tasks</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="n">client</span><span class="o">.</span><span class="n">get_chat_response</span><span class="p">(</span><span class="s2">&quot;Hello, how are you?&quot;</span><span class="p">),</span>
+        <span class="n">client</span><span class="o">.</span><span class="n">get_chat_response</span><span class="p">(</span><span class="s2">&quot;Hello, how are you?&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Bob&quot;</span><span class="p">),</span>
         <span class="n">client</span><span class="o">.</span><span class="n">get_image_url</span><span class="p">(</span><span class="s2">&quot;A cat&quot;</span><span class="p">),</span>
     <span class="p">]</span>
 
@@ -606,10 +628,10 @@
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": ".", "features": ["navigation.footer"], "search": "assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": ".", "features": ["navigation.footer"], "search": "assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="assets/javascripts/bundle.51198bba.min.js"></script>
+      <script src="assets/javascripts/bundle.220ee61c.min.js"></script>
       
     
   </body>
