@@ -500,6 +500,7 @@
       <p>Simple OpenAI API wrapper</p>
 <p>This class implements the Simple OpenAI API wrapper.</p>
 <p>To use this class, you need to have an OpenAI API key. You can get one from <a href="https://platform.openai.com">Openai</a>.</p>
+<p>An optional storage path can be provided.  If a storage path is provided, the chat messages will be stored in the directory specified by the storage path.  If no storage path is provided, the chat messages will not be stored.</p>
 
 
 
@@ -542,6 +543,20 @@
               <em>required</em>
           </td>
         </tr>
+        <tr>
+          <td><code>storage_path</code></td>
+          <td>
+                <code><span title="pathlib.Path">Path</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The path to the storage directory. Defaults to None.</p>
+            </div>
+          </td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
     </tbody>
   </table>
       <div class="admonition example">
@@ -556,7 +571,7 @@
     <span class="n">client</span> <span class="o">=</span> <span class="n">SimpleOpenai</span><span class="p">(</span><span class="n">api_key</span><span class="p">,</span> <span class="n">system_message</span><span class="p">)</span>
 
     <span class="c1"># Create tasks for the chat response and the image response</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_chat_response</span><span class="p">(</span><span class="s2">&quot;Hello, how are you?&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Bob&quot;</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_chat_response</span><span class="p">(</span><span class="s2">&quot;Hello, how are you?&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Bob&quot;</span><span class="p">,</span> <span class="n">chat_id</span><span class="o">=</span><span class="s2">&quot;Group 1&quot;</span><span class="p">)</span>
 
     <span class="c1"># Print the result</span>
     <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
@@ -584,8 +599,7 @@
 
             <details class="quote">
               <summary>Source code in <code>src/simple_openai/simple_openai.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 15</span>
-<span class="normal"> 16</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 16</span>
 <span class="normal"> 17</span>
 <span class="normal"> 18</span>
 <span class="normal"> 19</span>
@@ -719,60 +733,19 @@
 <span class="normal">147</span>
 <span class="normal">148</span>
 <span class="normal">149</span>
-<span class="normal">150</span>
-<span class="normal">151</span>
-<span class="normal">152</span>
-<span class="normal">153</span>
-<span class="normal">154</span>
-<span class="normal">155</span>
-<span class="normal">156</span>
-<span class="normal">157</span>
-<span class="normal">158</span>
-<span class="normal">159</span>
-<span class="normal">160</span>
-<span class="normal">161</span>
-<span class="normal">162</span>
-<span class="normal">163</span>
-<span class="normal">164</span>
-<span class="normal">165</span>
-<span class="normal">166</span>
-<span class="normal">167</span>
-<span class="normal">168</span>
-<span class="normal">169</span>
-<span class="normal">170</span>
-<span class="normal">171</span>
-<span class="normal">172</span>
-<span class="normal">173</span>
-<span class="normal">174</span>
-<span class="normal">175</span>
-<span class="normal">176</span>
-<span class="normal">177</span>
-<span class="normal">178</span>
-<span class="normal">179</span>
-<span class="normal">180</span>
-<span class="normal">181</span>
-<span class="normal">182</span>
-<span class="normal">183</span>
-<span class="normal">184</span>
-<span class="normal">185</span>
-<span class="normal">186</span>
-<span class="normal">187</span>
-<span class="normal">188</span>
-<span class="normal">189</span>
-<span class="normal">190</span>
-<span class="normal">191</span>
-<span class="normal">192</span>
-<span class="normal">193</span>
-<span class="normal">194</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">SimpleOpenai</span><span class="p">:</span>
+<span class="normal">150</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">SimpleOpenai</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Simple OpenAI API wrapper</span>
 
 <span class="sd">    This class implements the Simple OpenAI API wrapper.</span>
 
 <span class="sd">    To use this class, you need to have an OpenAI API key. You can get one from [Openai](https://platform.openai.com).</span>
 
+<span class="sd">    An optional storage path can be provided.  If a storage path is provided, the chat messages will be stored in the directory specified by the storage path.  If no storage path is provided, the chat messages will not be stored.</span>
+
 <span class="sd">    Args:</span>
 <span class="sd">        api_key (str): Your OpenAI API key</span>
 <span class="sd">        system_message (str): The system message to add to the start of the chat</span>
+<span class="sd">        storage_path (Path, optional): The path to the storage directory. Defaults to None.</span>
 
 <span class="sd">    !!!Example</span>
 <span class="sd">        ```python</span>
@@ -786,7 +759,7 @@
 <span class="sd">            client = SimpleOpenai(api_key, system_message)</span>
 
 <span class="sd">            # Create tasks for the chat response and the image response</span>
-<span class="sd">            result = client.get_chat_response(&quot;Hello, how are you?&quot;, name=&quot;Bob&quot;)</span>
+<span class="sd">            result = client.get_chat_response(&quot;Hello, how are you?&quot;, name=&quot;Bob&quot;, chat_id=&quot;Group 1&quot;)</span>
 
 <span class="sd">            # Print the result</span>
 <span class="sd">            if result.success:</span>
@@ -811,55 +784,31 @@
 <span class="sd">            main()</span>
 <span class="sd">        ```</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">api_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">system_message</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">api_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">system_message</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">storage_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s1">&#39;Content-Type&#39;</span><span class="p">:</span> <span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
             <span class="s1">&#39;Authorization&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;Bearer </span><span class="si">{</span><span class="n">api_key</span><span class="si">}</span><span class="s1">&#39;</span>
         <span class="p">}</span>
 
         <span class="c1"># Create the chat manager</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_chat</span> <span class="o">=</span> <span class="n">chat_manager</span><span class="o">.</span><span class="n">ChatManager</span><span class="p">(</span><span class="n">system_message</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_chat</span> <span class="o">=</span> <span class="n">chat_manager</span><span class="o">.</span><span class="n">ChatManager</span><span class="p">(</span><span class="n">system_message</span><span class="p">,</span> <span class="n">storage_path</span><span class="o">=</span><span class="n">storage_path</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">get_chat_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SimpleOpenaiResponse</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">get_chat_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">chat_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">constants</span><span class="o">.</span><span class="n">DEFAULT_CHAT_ID</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SimpleOpenaiResponse</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a chat response from OpenAI</span>
+
+<span class="sd">        An optional chat ID can be provided.  If a chat ID is provided, the chat will be continued from the chat with the specified ID.  If no chat ID is provided, all messages will be mixed into a single list.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            prompt (str): The prompt to use for the chat response</span>
 <span class="sd">            name (str): The name of the person talking to the bot</span>
+<span class="sd">            chat_id (str, optional): The ID of the chat to continue. Defaults to DEFAULT_CHAT_ID.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            SimpleOpenaiResponse: The chat response, the value of `success` should be checked before using the value of `message`</span>
-
-<span class="sd">        !!!Example</span>
-<span class="sd">            ```python</span>
-<span class="sd">            from simple_openai import SimpleOpenai</span>
-
-<span class="sd">            def main():</span>
-<span class="sd">                # Create a system message</span>
-<span class="sd">                system_message = &quot;You are a helpful chatbot. You are very friendly and helpful. You are a good friend to have.&quot;</span>
-
-<span class="sd">                # Create the client</span>
-<span class="sd">                client = SimpleOpenai(api_key, system_message)</span>
-
-<span class="sd">                # Get the chat response</span>
-<span class="sd">                response = client.get_chat_response(&quot;Hello, how are you?&quot;, name=&quot;Bob&quot;)</span>
-
-<span class="sd">                # Check if the request was successful</span>
-<span class="sd">                if response.success:</span>
-<span class="sd">                    # Print the chat response</span>
-<span class="sd">                    print(f&#39;Chat response: {response.message}&#39;)</span>
-<span class="sd">                else:</span>
-<span class="sd">                    # Print the error message</span>
-<span class="sd">                    print(f&#39;Error: {response.message}&#39;)</span>
-
-<span class="sd">            if __name__ == &quot;__main__&quot;:</span>
-<span class="sd">                main()</span>
-<span class="sd">            ```</span>
-
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># Create the request body</span>
-        <span class="n">messages</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chat</span><span class="o">.</span><span class="n">add_message</span><span class="p">(</span><span class="n">open_ai_models</span><span class="o">.</span><span class="n">ChatMessage</span><span class="p">(</span><span class="n">role</span><span class="o">=</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="n">prompt</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">))</span><span class="o">.</span><span class="n">messages</span>        
+        <span class="n">messages</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chat</span><span class="o">.</span><span class="n">add_message</span><span class="p">(</span><span class="n">open_ai_models</span><span class="o">.</span><span class="n">ChatMessage</span><span class="p">(</span><span class="n">role</span><span class="o">=</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="n">prompt</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">),</span> <span class="n">chat_id</span><span class="o">=</span><span class="n">chat_id</span><span class="p">)</span><span class="o">.</span><span class="n">messages</span>        
 
         <span class="c1"># Create the request body</span>
         <span class="n">request_body</span> <span class="o">=</span> <span class="n">open_ai_models</span><span class="o">.</span><span class="n">ChatRequest</span><span class="p">(</span><span class="n">messages</span><span class="o">=</span><span class="n">messages</span><span class="p">)</span>
@@ -895,30 +844,6 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            SimpleOpenaiResponse: The image response, the value of `success` should be checked before using the value of `message`</span>
-
-<span class="sd">        !!!Example</span>
-<span class="sd">            ```python</span>
-<span class="sd">            from simple_openai import SimpleOpenai</span>
-
-<span class="sd">            def main():</span>
-
-<span class="sd">                # Create the client</span>
-<span class="sd">                client = AsyncSimpleOpenai(api_key)</span>
-
-<span class="sd">                # Get the image response</span>
-<span class="sd">                response = client.get_image_url(&quot;A cat&quot;)</span>
-
-<span class="sd">                # Check if the request was successful</span>
-<span class="sd">                if response.success:</span>
-<span class="sd">                    # Print the image URL</span>
-<span class="sd">                    print(f&#39;Image Generated Successfully, it can be found at {response.message}&#39;)</span>
-<span class="sd">                else:</span>
-<span class="sd">                    # Print the error message</span>
-<span class="sd">                    print(f&#39;Image Generation Failed, Error: {response.message}&#39;)</span>
-
-<span class="sd">            if __name__ == &quot;__main__&quot;:</span>
-<span class="sd">                main()</span>
-<span class="sd">            ```</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># Create the request body</span>
@@ -964,7 +889,7 @@
 
 
 <h3 id="src.simple_openai.simple_openai.SimpleOpenai.get_chat_response" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">get_chat_response</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">get_chat_response</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">chat_id</span><span class="o">=</span><span class="n">constants</span><span class="o">.</span><span class="n">DEFAULT_CHAT_ID</span><span class="p">)</span></code>
 
 <a href="#src.simple_openai.simple_openai.SimpleOpenai.get_chat_response" class="headerlink" title="Permanent link">&para;</a></h3>
 
@@ -972,6 +897,7 @@
   <div class="doc doc-contents ">
   
       <p>Get a chat response from OpenAI</p>
+<p>An optional chat ID can be provided.  If a chat ID is provided, the chat will be continued from the chat with the specified ID.  If no chat ID is provided, all messages will be mixed into a single list.</p>
 
 
 
@@ -1014,6 +940,20 @@
               <em>required</em>
           </td>
         </tr>
+        <tr>
+          <td><code>chat_id</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The ID of the chat to continue. Defaults to DEFAULT_CHAT_ID.</p>
+            </div>
+          </td>
+          <td>
+                <code><span title="src.simple_openai.constants">constants</span>.<span title="src.simple_openai.constants.DEFAULT_CHAT_ID">DEFAULT_CHAT_ID</span></code>
+          </td>
+        </tr>
     </tbody>
   </table>
 
@@ -1040,40 +980,10 @@
         </tr>
     </tbody>
   </table>
-      <div class="admonition example">
-<p class="admonition-title">Example</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">simple_openai</span> <span class="kn">import</span> <span class="n">SimpleOpenai</span>
-
-<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
-    <span class="c1"># Create a system message</span>
-    <span class="n">system_message</span> <span class="o">=</span> <span class="s2">&quot;You are a helpful chatbot. You are very friendly and helpful. You are a good friend to have.&quot;</span>
-
-    <span class="c1"># Create the client</span>
-    <span class="n">client</span> <span class="o">=</span> <span class="n">SimpleOpenai</span><span class="p">(</span><span class="n">api_key</span><span class="p">,</span> <span class="n">system_message</span><span class="p">)</span>
-
-    <span class="c1"># Get the chat response</span>
-    <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_chat_response</span><span class="p">(</span><span class="s2">&quot;Hello, how are you?&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Bob&quot;</span><span class="p">)</span>
-
-    <span class="c1"># Check if the request was successful</span>
-    <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
-        <span class="c1"># Print the chat response</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Chat response: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="c1"># Print the error message</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Error: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-    <span class="n">main</span><span class="p">()</span>
-</code></pre></div>
-</div>
 
           <details class="quote">
             <summary>Source code in <code>src/simple_openai/simple_openai.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 72</span>
-<span class="normal"> 73</span>
-<span class="normal"> 74</span>
-<span class="normal"> 75</span>
-<span class="normal"> 76</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 76</span>
 <span class="normal"> 77</span>
 <span class="normal"> 78</span>
 <span class="normal"> 79</span>
@@ -1114,66 +1024,22 @@
 <span class="normal">114</span>
 <span class="normal">115</span>
 <span class="normal">116</span>
-<span class="normal">117</span>
-<span class="normal">118</span>
-<span class="normal">119</span>
-<span class="normal">120</span>
-<span class="normal">121</span>
-<span class="normal">122</span>
-<span class="normal">123</span>
-<span class="normal">124</span>
-<span class="normal">125</span>
-<span class="normal">126</span>
-<span class="normal">127</span>
-<span class="normal">128</span>
-<span class="normal">129</span>
-<span class="normal">130</span>
-<span class="normal">131</span>
-<span class="normal">132</span>
-<span class="normal">133</span>
-<span class="normal">134</span>
-<span class="normal">135</span>
-<span class="normal">136</span>
-<span class="normal">137</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_chat_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SimpleOpenaiResponse</span><span class="p">:</span>
+<span class="normal">117</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_chat_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">chat_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">constants</span><span class="o">.</span><span class="n">DEFAULT_CHAT_ID</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SimpleOpenaiResponse</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get a chat response from OpenAI</span>
+
+<span class="sd">    An optional chat ID can be provided.  If a chat ID is provided, the chat will be continued from the chat with the specified ID.  If no chat ID is provided, all messages will be mixed into a single list.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        prompt (str): The prompt to use for the chat response</span>
 <span class="sd">        name (str): The name of the person talking to the bot</span>
+<span class="sd">        chat_id (str, optional): The ID of the chat to continue. Defaults to DEFAULT_CHAT_ID.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        SimpleOpenaiResponse: The chat response, the value of `success` should be checked before using the value of `message`</span>
-
-<span class="sd">    !!!Example</span>
-<span class="sd">        ```python</span>
-<span class="sd">        from simple_openai import SimpleOpenai</span>
-
-<span class="sd">        def main():</span>
-<span class="sd">            # Create a system message</span>
-<span class="sd">            system_message = &quot;You are a helpful chatbot. You are very friendly and helpful. You are a good friend to have.&quot;</span>
-
-<span class="sd">            # Create the client</span>
-<span class="sd">            client = SimpleOpenai(api_key, system_message)</span>
-
-<span class="sd">            # Get the chat response</span>
-<span class="sd">            response = client.get_chat_response(&quot;Hello, how are you?&quot;, name=&quot;Bob&quot;)</span>
-
-<span class="sd">            # Check if the request was successful</span>
-<span class="sd">            if response.success:</span>
-<span class="sd">                # Print the chat response</span>
-<span class="sd">                print(f&#39;Chat response: {response.message}&#39;)</span>
-<span class="sd">            else:</span>
-<span class="sd">                # Print the error message</span>
-<span class="sd">                print(f&#39;Error: {response.message}&#39;)</span>
-
-<span class="sd">        if __name__ == &quot;__main__&quot;:</span>
-<span class="sd">            main()</span>
-<span class="sd">        ```</span>
-
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># Create the request body</span>
-    <span class="n">messages</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chat</span><span class="o">.</span><span class="n">add_message</span><span class="p">(</span><span class="n">open_ai_models</span><span class="o">.</span><span class="n">ChatMessage</span><span class="p">(</span><span class="n">role</span><span class="o">=</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="n">prompt</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">))</span><span class="o">.</span><span class="n">messages</span>        
+    <span class="n">messages</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chat</span><span class="o">.</span><span class="n">add_message</span><span class="p">(</span><span class="n">open_ai_models</span><span class="o">.</span><span class="n">ChatMessage</span><span class="p">(</span><span class="n">role</span><span class="o">=</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="n">prompt</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">),</span> <span class="n">chat_id</span><span class="o">=</span><span class="n">chat_id</span><span class="p">)</span><span class="o">.</span><span class="n">messages</span>        
 
     <span class="c1"># Create the request body</span>
     <span class="n">request_body</span> <span class="o">=</span> <span class="n">open_ai_models</span><span class="o">.</span><span class="n">ChatRequest</span><span class="p">(</span><span class="n">messages</span><span class="o">=</span><span class="n">messages</span><span class="p">)</span>
@@ -1274,34 +1140,30 @@
         </tr>
     </tbody>
   </table>
-      <div class="admonition example">
-<p class="admonition-title">Example</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">simple_openai</span> <span class="kn">import</span> <span class="n">SimpleOpenai</span>
-
-<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
-
-    <span class="c1"># Create the client</span>
-    <span class="n">client</span> <span class="o">=</span> <span class="n">AsyncSimpleOpenai</span><span class="p">(</span><span class="n">api_key</span><span class="p">)</span>
-
-    <span class="c1"># Get the image response</span>
-    <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_image_url</span><span class="p">(</span><span class="s2">&quot;A cat&quot;</span><span class="p">)</span>
-
-    <span class="c1"># Check if the request was successful</span>
-    <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
-        <span class="c1"># Print the image URL</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Image Generated Successfully, it can be found at </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="c1"># Print the error message</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Image Generation Failed, Error: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-    <span class="n">main</span><span class="p">()</span>
-</code></pre></div>
-</div>
 
           <details class="quote">
             <summary>Source code in <code>src/simple_openai/simple_openai.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">139</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
 <span class="normal">140</span>
 <span class="normal">141</span>
 <span class="normal">142</span>
@@ -1312,51 +1174,7 @@
 <span class="normal">147</span>
 <span class="normal">148</span>
 <span class="normal">149</span>
-<span class="normal">150</span>
-<span class="normal">151</span>
-<span class="normal">152</span>
-<span class="normal">153</span>
-<span class="normal">154</span>
-<span class="normal">155</span>
-<span class="normal">156</span>
-<span class="normal">157</span>
-<span class="normal">158</span>
-<span class="normal">159</span>
-<span class="normal">160</span>
-<span class="normal">161</span>
-<span class="normal">162</span>
-<span class="normal">163</span>
-<span class="normal">164</span>
-<span class="normal">165</span>
-<span class="normal">166</span>
-<span class="normal">167</span>
-<span class="normal">168</span>
-<span class="normal">169</span>
-<span class="normal">170</span>
-<span class="normal">171</span>
-<span class="normal">172</span>
-<span class="normal">173</span>
-<span class="normal">174</span>
-<span class="normal">175</span>
-<span class="normal">176</span>
-<span class="normal">177</span>
-<span class="normal">178</span>
-<span class="normal">179</span>
-<span class="normal">180</span>
-<span class="normal">181</span>
-<span class="normal">182</span>
-<span class="normal">183</span>
-<span class="normal">184</span>
-<span class="normal">185</span>
-<span class="normal">186</span>
-<span class="normal">187</span>
-<span class="normal">188</span>
-<span class="normal">189</span>
-<span class="normal">190</span>
-<span class="normal">191</span>
-<span class="normal">192</span>
-<span class="normal">193</span>
-<span class="normal">194</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_image_url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SimpleOpenaiResponse</span><span class="p">:</span>
+<span class="normal">150</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_image_url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SimpleOpenaiResponse</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get an image response from OpenAI</span>
 
 <span class="sd">    Args:</span>
@@ -1364,30 +1182,6 @@
 
 <span class="sd">    Returns:</span>
 <span class="sd">        SimpleOpenaiResponse: The image response, the value of `success` should be checked before using the value of `message`</span>
-
-<span class="sd">    !!!Example</span>
-<span class="sd">        ```python</span>
-<span class="sd">        from simple_openai import SimpleOpenai</span>
-
-<span class="sd">        def main():</span>
-
-<span class="sd">            # Create the client</span>
-<span class="sd">            client = AsyncSimpleOpenai(api_key)</span>
-
-<span class="sd">            # Get the image response</span>
-<span class="sd">            response = client.get_image_url(&quot;A cat&quot;)</span>
-
-<span class="sd">            # Check if the request was successful</span>
-<span class="sd">            if response.success:</span>
-<span class="sd">                # Print the image URL</span>
-<span class="sd">                print(f&#39;Image Generated Successfully, it can be found at {response.message}&#39;)</span>
-<span class="sd">            else:</span>
-<span class="sd">                # Print the error message</span>
-<span class="sd">                print(f&#39;Image Generation Failed, Error: {response.message}&#39;)</span>
-
-<span class="sd">        if __name__ == &quot;__main__&quot;:</span>
-<span class="sd">            main()</span>
-<span class="sd">        ```</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># Create the request body</span>
