@@ -23,14 +23,17 @@ For the synchronous version, you can use the following code:
     from simple_openai import SimpleOpenai
 
     def main():
+        # Initialise a storage location
+        storage_location = Path("/path/to/storage")
+
         # Create a system message
         system_message = "You are a helpful chatbot. You are very friendly and helpful. You are a good friend to have."
 
         # Create the client
-        client = SimpleOpenai(api_key, system_message)
+        client = SimpleOpenai(api_key, system_message, storage_location)
 
         # Create tasks for the chat response and the image response
-        result = client.get_chat_response("Hello, how are you?", name="Bob")
+        result = client.get_chat_response("Hello, how are you?", name="Bob", chat_id="Group 1")
 
         # Print the result
         if result.success:
@@ -63,15 +66,18 @@ For the asynchronous version, you can use the following code:
     import asyncio
 
     async def main():
+        # Initialise a storage location
+        storage_location = Path("/path/to/storage")
+
         # Create a system message
         system_message = "You are a helpful chatbot. You are very friendly and helpful. You are a good friend to have."
 
         # Create the client
-        client = AsyncSimpleOpenai(api_key, system_message)
+        client = AsyncSimpleOpenai(api_key, system_message, storage_location)
 
         # Create tasks for the chat response and the image response
         tasks = [
-            client.get_chat_response("Hello, how are you?", name="Bob"),
+            client.get_chat_response("Hello, how are you?", name="Bob", chat_id="Group 1"),
             client.get_image_url("A cat"),
         ]
 

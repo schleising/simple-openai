@@ -5,6 +5,7 @@ The is the async version of the Simple OpenAI API wrapper which uses the [`aioht
 It is intended for use with asyncio applications.  If you are not using asyncio, you should use the [Simple OpenAI API wrapper](/simple_openai/simple_openai/) instead.
 """
 
+from pathlib import Path
 import aiohttp
 
 from . import constants
@@ -19,9 +20,12 @@ class AsyncSimpleOpenai:
 
     To use this class, you need to have an OpenAI API key. You can get one from [Openai](https://platform.openai.com).
 
+    An optional storage path can be provided.  If a storage path is provided, the chat messages will be stored in the directory specified by the storage path.  If no storage path is provided, the chat messages will not be stored.
+
     Args:
         api_key (str): Your OpenAI API key
         system_message (str): The system message to add to the start of the chat
+        storage_path (Path, optional): The path to the storage directory. Defaults to None.
 
     !!!Example
         ```python
@@ -29,15 +33,18 @@ class AsyncSimpleOpenai:
         import asyncio
 
         async def main():
+            # Get the storage path
+            storage_path = Path("/path/to/storage")
+
             # Create a system message
             system_message = "You are a helpful chatbot. You are very friendly and helpful. You are a good friend to have."
 
             # Create the client
-            client = AsyncSimpleOpenai(api_key, system_message)
+            client = AsyncSimpleOpenai(api_key, system_message, storage_path)
 
             # Create tasks for the chat response and the image response
             tasks = [
-                client.get_chat_response("Hello, how are you?", name="Bob"),
+                client.get_chat_response("Hello, how are you?", name="Bob", chat_id="Group 1"),
                 client.get_image_url("A cat"),
             ]
 
@@ -59,56 +66,31 @@ class AsyncSimpleOpenai:
             asyncio.run(main())
         ```
     """
-    def __init__(self, api_key: str, system_message: str) -> None:
+    def __init__(self, api_key: str, system_message: str, storage_path: Path | None = None) -> None:
         self._headers = {
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {api_key}'
         }
 
         # Create the chat manager
-        self._chat = chat_manager.ChatManager(system_message)
+        self._chat = chat_manager.ChatManager(system_message, storage_path=storage_path)
 
-    async def get_chat_response(self, prompt: str, name: str) -> SimpleOpenaiResponse:
+    async def get_chat_response(self, prompt: str, name: str, chat_id: str = constants.DEFAULT_CHAT_ID) -> SimpleOpenaiResponse:
         """Get a chat response from OpenAI
+
+        An optional chat ID can be provided.  If a chat ID is provided, the chat will be continued from the chat with the specified ID.  If no chat ID is provided, all messages will be mixed into a single list.
 
         Args:
             prompt (str): The prompt to use for the chat response
             name (str): The name of the user
+            chat_id (str, optional): The ID of the chat to continue. Defaults to DEFAULT_CHAT_ID.
 
         Returns:
             SimpleOpenaiResponse: The chat response, the value of `success` should be checked before using the value of `message`
 
-        !!!Example
-            ```python
-            from simple_openai import AsyncSimpleOpenai
-            import asyncio
-
-            async def main():
-
-                # Create a system message
-                system_message = "You are a helpful chatbot. You are very friendly and helpful. You are a good friend to have."
-
-                # Create the client
-                client = AsyncSimpleOpenai(api_key, system_message)
-
-                # Get the chat response
-                response = await client.get_chat_response("Hello, how are you?", name="Bob")
-
-                # Check if the request was successful
-                if response.success:
-                    # Print the chat response
-                    print(f'Chat response: {response.message}')
-                else:
-                    # Print the error message
-                    print(f'Error: {response.message}')
-
-            if __name__ == "__main__":
-                asyncio.run(main())
-            ```
-
         """
         # Add the message to the chat
-        messages = self._chat.add_message(open_ai_models.ChatMessage(role='user', content=prompt, name=name)).messages        
+        messages = self._chat.add_message(open_ai_models.ChatMessage(role='user', content=prompt, name=name), chat_id=chat_id).messages        
 
         # Create the request body
         request_body = open_ai_models.ChatRequest(messages=messages)
@@ -145,31 +127,6 @@ class AsyncSimpleOpenai:
 
         Returns:
             SimpleOpenaiResponse: The image response, the value of `success` should be checked before using the value of `message`
-
-        !!!Example
-            ```python
-            from simple_openai import AsyncSimpleOpenai
-            import asyncio
-
-            async def main():
-            
-                # Create the client
-                client = AsyncSimpleOpenai(api_key)
-
-                # Get the image response
-                response = await client.get_image_url("A cat")
-
-                # Check if the request was successful
-                if response.success:
-                    # Print the image URL
-                    print(f'Image Generated Successfully, it can be found at {response.message}')
-                else:
-                    # Print the error message
-                    print(f'Image Generation Failed, Error: {response.message}')
-
-            if __name__ == "__main__":
-                asyncio.run(main())
-            ```
         """
             
         # Create the request body
