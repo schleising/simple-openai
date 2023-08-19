@@ -108,11 +108,11 @@ class AsyncSimpleOpenai:
         # Open a session
         async with aiohttp.ClientSession(headers=self._headers, base_url=constants.BASE_URL) as session:
             # Send the request
-            async with session.post(constants.CHAT_URL, json=request_body.dict()) as response:
+            async with session.post(constants.CHAT_URL, json=request_body.model_dump()) as response:
                 # Check the status code
                 if response.status == 200:
                     # Parse the response body
-                    response_body = open_ai_models.ChatResponse.parse_raw(await response.text())
+                    response_body = open_ai_models.ChatResponse.model_validate_json(await response.text())
 
                     # Create the response
                     response = SimpleOpenaiResponse(True, response_body.choices[0].message.content)
@@ -121,7 +121,7 @@ class AsyncSimpleOpenai:
                     self._chat.add_message(open_ai_models.ChatMessage(role='assistant', content=response.message, name='Botto'))
                 else:
                     # Parse the error response body
-                    response_body = open_ai_models.ErrorResponse.parse_raw(await response.text())
+                    response_body = open_ai_models.ErrorResponse.model_validate_json(await response.text())
 
                     # Create the response
                     response = SimpleOpenaiResponse(False, response_body.error.message)
@@ -145,17 +145,17 @@ class AsyncSimpleOpenai:
         # Open a session
         async with aiohttp.ClientSession(headers=self._headers, base_url=constants.BASE_URL) as session:
             # Send the request
-            async with session.post(constants.IMAGE_URL, json=request_body.dict()) as response:
+            async with session.post(constants.IMAGE_URL, json=request_body.model_dump()) as response:
                 # Check the status code
                 if response.status == 200:
                     # Parse the response body
-                    response_body = open_ai_models.ImageResponse.parse_raw(await response.text())
+                    response_body = open_ai_models.ImageResponse.model_validate_json(await response.text())
 
                     # Create the response
                     response = SimpleOpenaiResponse(True, response_body.data[0].url)
                 else:
                     # Parse the error response body
-                    response_body = open_ai_models.ErrorResponse.parse_raw(await response.text())
+                    response_body = open_ai_models.ErrorResponse.model_validate_json(await response.text())
 
                     # Create the response
                     response = SimpleOpenaiResponse(False, response_body.error.message)
