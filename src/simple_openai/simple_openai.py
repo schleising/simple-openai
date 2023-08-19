@@ -73,6 +73,14 @@ class SimpleOpenai:
         # Create the chat manager
         self._chat = chat_manager.ChatManager(system_message, storage_path=storage_path)
 
+    def update_system_message(self, system_message: str) -> None:
+        """Update the system message
+
+        Args:
+            system_message (str): The new system message
+        """
+        self._chat.update_system_message(system_message)
+
     def get_chat_response(self, prompt: str, name: str, chat_id: str = constants.DEFAULT_CHAT_ID) -> SimpleOpenaiResponse:
         """Get a chat response from OpenAI
 

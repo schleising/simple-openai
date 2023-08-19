@@ -49,6 +49,14 @@ class ChatManager:
             # initialise a deque of messages not including the system message
             self._messages: dict[str, deque[open_ai_models.ChatMessage]] = {}
 
+    def update_system_message(self, system_message: str) -> None:
+        """Update the system message
+
+        Args:
+            system_message (str): The new system message
+        """
+        self._system_message = system_message
+
     def add_message(self, message: open_ai_models.ChatMessage, chat_id: str = DEFAULT_CHAT_ID) -> open_ai_models.Chat:
         """Add a message to the chat
 
