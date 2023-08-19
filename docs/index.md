@@ -2,7 +2,7 @@
 
 This is a simple wrapper for the OpenAI API, which allows you to easily use the API in your projects.
 
-It provides both [synchronous](/simple_openai/simple_openai/) and [asynchronous](/simple_openai/async_simple_openai/) versions of the wrapper.
+It provides both [synchronous](simple_openai/simple_openai.md) and [asynchronous](simple_openai/async_simple_openai.md) versions of the wrapper.
 
 ## Installation
 
@@ -101,7 +101,7 @@ For the asynchronous version, you can use the following code:
 
 ### Output
 
-The output of the functions is a [SimpleOpenaiResponse](/simple-openai/simple_openai/responses/#src.simple_openai.responses.SimpleOpenaiResponse) object, which contains the following properties:
+The output of the functions is a [SimpleOpenaiResponse](simple_openai/responses.md#src.simple_openai.responses.SimpleOpenaiResponse) object, which contains the following properties:
 
 - `success` - A boolean indicating whether the request was successful or not.
 - `message` - The message returned by the API.

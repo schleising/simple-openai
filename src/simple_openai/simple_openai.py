@@ -2,7 +2,7 @@
 
 The is the synchronous version of the Simple OpenAI API wrapper which uses the [`requests`](https://requests.readthedocs.io/en/latest/) library.
 
-If you wish to use the async version, you should use the [AsyncSimple OpenAI API wrapper](/simple_openai/async_simple_openai/) instead.
+If you wish to use the async version, you should use the [AsyncSimple OpenAI API wrapper](async_simple_openai.md) instead.
 """
 
 from pathlib import Path

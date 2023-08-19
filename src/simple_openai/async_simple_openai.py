@@ -2,7 +2,7 @@
 
 The is the async version of the Simple OpenAI API wrapper which uses the [`aiohttp`](https://docs.aiohttp.org/en/stable/index.html) library.
 
-It is intended for use with asyncio applications.  If you are not using asyncio, you should use the [Simple OpenAI API wrapper](/simple_openai/simple_openai/) instead.
+It is intended for use with asyncio applications.  If you are not using asyncio, you should use the [Simple OpenAI API wrapper](simple_openai.md) instead.
 """
 
 from pathlib import Path
