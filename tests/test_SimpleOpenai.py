@@ -23,7 +23,7 @@ def initiate_chat():
     """
 
     # Create the client
-    client = SimpleOpenai(api_key, system_message, Path("storage"))
+    client = SimpleOpenai(api_key, system_message, Path("storage"), timezone="Europe/London")
 
     # Create tasks for the chat responses and the image response
     results = [
@@ -31,6 +31,9 @@ def initiate_chat():
         client.get_chat_response("Where is Alaska?", name="Steve"),
         client.get_chat_response("Where is New York?", name="Tim"),
         client.get_chat_response("Where is Wellington?", name="Dean"),
+        client.get_chat_response("What day is it tomorrow?", name="Steve", add_date_time=True),
+        client.get_chat_response("And what day of the week is that?", name="Steve", add_date_time=True),
+        client.get_chat_response("What time is it?", name="Steve", add_date_time=True),
     ]
 
     # Get the results
