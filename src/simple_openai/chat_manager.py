@@ -7,8 +7,10 @@ The chat manager is used to manage the chat messages and create the chat, it lim
 
 
 from collections import deque
+from datetime import datetime
 from pathlib import Path
 import pickle
+from zoneinfo import ZoneInfo
 
 from .models import open_ai_models
 from .constants import MAX_CHAT_HISTORY, CHAT_HISTORY_FILE, DEFAULT_CHAT_ID
@@ -26,11 +28,13 @@ class ChatManager:
         system_message (str): The system message to add to the start of the chat
         max_messages (int, optional): The maximum number of messages in the chat. Defaults to 21.
         storage_path (Path, optional): The path to the storage directory. Defaults to None.
+        timezone (str, optional): The timezone to use for the chat messages. Defaults to 'UTC'.
     """
-    def __init__(self, system_message: str, max_messages: int = MAX_CHAT_HISTORY, storage_path: Path | None = None) -> None:
+    def __init__(self, system_message: str, max_messages: int = MAX_CHAT_HISTORY, storage_path: Path | None = None, timezone: str = 'UTC') -> None:
         self._system_message = system_message
         self._max_messages = max_messages
         self._storage_path = storage_path
+        self._timezone = ZoneInfo(timezone)
 
         # If a storage path is provided, create the storage directory
         if self._storage_path is not None:
@@ -57,12 +61,13 @@ class ChatManager:
         """
         self._system_message = system_message
 
-    def add_message(self, message: open_ai_models.ChatMessage, chat_id: str = DEFAULT_CHAT_ID) -> open_ai_models.Chat:
+    def add_message(self, message: open_ai_models.ChatMessage, chat_id: str = DEFAULT_CHAT_ID, add_date_time: bool = False) -> open_ai_models.Chat:
         """Add a message to the chat
 
         Args:
             message (open_ai_models.ChatMessage): The message to add to the chat
             chat_id (str, optional): The ID of the chat to add the message to. Defaults to DEFAULT_CHAT_ID.
+            add_date_time (bool, optional): Whether to add the date and time to the start of the prompt. Defaults to False.
 
         Returns:
             open_ai_models.Chat: The chat
@@ -80,9 +85,15 @@ class ChatManager:
             with open(self._storage_path / CHAT_HISTORY_FILE, 'wb') as f:
                 pickle.dump(self._messages, f)
 
+        # Update the system message with the date and time in iso format if required
+        if add_date_time:
+            system_message = f'The date and time is {datetime.now(tz=self._timezone).isoformat()}.\n{self._system_message}'
+        else:
+            system_message = self._system_message
+
         # Create the chat adding the system message to the start
         chat = open_ai_models.Chat(messages=[
-            open_ai_models.ChatMessage(role='system', content=self._system_message, name='System')
+            open_ai_models.ChatMessage(role='system', content=system_message, name='System')
         ] + list(self._messages[chat_id]))
 
         # Return the chat
