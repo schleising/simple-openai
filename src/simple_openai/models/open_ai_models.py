@@ -1,15 +1,50 @@
+""" OpenAI API models
+
+This module contains the models for the OpenAI API.
+
+The models are used to validate the data sent to and received from the OpenAI API.
+
+The models are based on the [OpenAI API documentation](https://beta.openai.com/docs/api-reference/introduction) and use [Pydantic](https://pydantic-docs.helpmanual.io/) to help serialise and deserialise the JSON.
+"""
+
 from pydantic import BaseModel
 
 class OpenAIParameter(BaseModel):
+    """ OpenAI parameter
+
+    This class represents an OpenAI parameter.
+
+    Attributes:
+        type (str): The type of the parameter
+        description (str): The description of the parameter, used by OpenAI to decide whether to use the parameter
+    """
     type: str
     description: str
 
 class OpenAIParameters(BaseModel):
+    """ OpenAI parameters
+
+    This class represents a list of OpenAI parameters.
+
+    Attributes:
+        type (str): The type of the parameters
+        properties (dict[str, OpenAIParameter]): The parameters
+        required (list[str], optional): The required parameters. Defaults to [].
+    """
     type: str = 'object'
     properties: dict[str, OpenAIParameter]
     required: list[str] = []
 
 class OpenAIFunction(BaseModel):
+    """ OpenAI function
+
+    This class represents an OpenAI function.
+
+    Attributes:
+        name (str): The name of the function
+        description (str): The description of the function, used by OpenAI to decide whether to use the function
+        parameters (OpenAIParameters): The parameters of the function
+    """
     name: str
     description: str
     parameters: OpenAIParameters

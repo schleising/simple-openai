@@ -15,7 +15,7 @@ class SimpleOpenaiResponse:
 
     If `success` is False, `message` will contain the error message.
 
-    Args:
+    Attributes:
         success (bool): True if the request was successful, False otherwise
         message (str): The message of the response
     """

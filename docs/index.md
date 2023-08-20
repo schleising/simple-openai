@@ -106,6 +106,12 @@ The output of the functions is a [SimpleOpenaiResponse](simple_openai/responses.
 - `success` - A boolean indicating whether the request was successful or not.
 - `message` - The message returned by the API.
 
+### Functions
+
+Functions can be added to the client using the `add_function` method. This method takes a function name and a function as arguments. The function should take an [OpenAIFunction](simple_openai/public_models.md/#src.simple_openai.models.open_ai_models.OpenAIFunction) object as its first argument, and the Python function itself as the second argument.
+
+The Python function should return a string, which will be passed to the API using the `function` role
+
 ## Documentation
 
 The documentation for the package can be found in the reference section.
