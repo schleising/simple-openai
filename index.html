@@ -280,6 +280,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#functions" class="md-nav__link">
+    Functions
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -385,6 +392,34 @@
 
             
           
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="simple_openai/function_manager/" class="md-nav__link">
+        FunctionManager
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="simple_openai/public_models/" class="md-nav__link">
+        Public Models
+      </a>
+    </li>
+  
+
+            
+          
         </ul>
       </nav>
     </li>
@@ -442,6 +477,13 @@
           <li class="md-nav__item">
   <a href="#output" class="md-nav__link">
     Output
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#functions" class="md-nav__link">
+    Functions
   </a>
   
 </li>
@@ -572,6 +614,9 @@
 <li><code>success</code> - A boolean indicating whether the request was successful or not.</li>
 <li><code>message</code> - The message returned by the API.</li>
 </ul>
+<h3 id="functions">Functions<a class="headerlink" href="#functions" title="Permanent link">&para;</a></h3>
+<p>Functions can be added to the client using the <code>add_function</code> method. This method takes a function name and a function as arguments. The function should take an <a href="simple_openai/public_models/#src.simple_openai.models.open_ai_models.OpenAIFunction">OpenAIFunction</a> object as its first argument, and the Python function itself as the second argument.</p>
+<p>The Python function should return a string, which will be passed to the API using the <code>function</code> role</p>
 <h2 id="documentation">Documentation<a class="headerlink" href="#documentation" title="Permanent link">&para;</a></h2>
 <p>The documentation for the package can be found in the reference section.</p>
 
