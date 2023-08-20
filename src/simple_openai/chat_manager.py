@@ -87,7 +87,7 @@ class ChatManager:
 
         # Update the system message with the date and time in iso format if required
         if add_date_time:
-            system_message = f'The date and time is {datetime.now(tz=self._timezone).isoformat()}.\n{self._system_message}'
+            system_message = f'The date and time is {datetime.now(tz=self._timezone).isoformat()} give answers in timezone {self._timezone.key}.\n{self._system_message}'
         else:
             system_message = self._system_message
 

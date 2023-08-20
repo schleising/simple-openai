@@ -1,5 +1,23 @@
 from pydantic import BaseModel
 
+class OpenAIParameter(BaseModel):
+    type: str
+    description: str
+
+class OpenAIParameters(BaseModel):
+    type: str = 'object'
+    properties: dict[str, OpenAIParameter]
+    required: list[str] = []
+
+class OpenAIFunction(BaseModel):
+    name: str
+    description: str
+    parameters: OpenAIParameters
+
+class FunctionCall(BaseModel):
+    name: str
+    arguments: str
+
 class ChatMessage(BaseModel):
     role: str
     content: str
@@ -9,11 +27,18 @@ class Chat(BaseModel):
     messages: list[ChatMessage]
 
 class ChatRequest(Chat):
+    functions: list[OpenAIFunction] | None = None
+    function_call: str
     model: str = 'gpt-4'
+
+class ResponseMessage(BaseModel):
+    role: str
+    content: str | None
+    function_call: FunctionCall | None = None
 
 class Choice(BaseModel):
     index: int
-    message: ChatMessage
+    message: ResponseMessage
     finish_reason: str
 
 class Usage(BaseModel):

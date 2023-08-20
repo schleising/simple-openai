@@ -11,3 +11,5 @@ FULL_IMAGE_URL = BASE_URL + IMAGE_URL
 MAX_CHAT_HISTORY = 21
 CHAT_HISTORY_FILE = Path('chat_history.pickle')
 DEFAULT_CHAT_ID = 'default'
+
+OPEN_AI_FUNCTION_CALL = 'function_call'
