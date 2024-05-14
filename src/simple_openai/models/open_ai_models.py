@@ -64,7 +64,7 @@ class Chat(BaseModel):
 class ChatRequest(Chat):
     functions: list[OpenAIFunction] | None = None
     function_call: str
-    model: str = 'gpt-4'
+    model: str = 'gpt-4o'
 
 class ResponseMessage(BaseModel):
     role: str
