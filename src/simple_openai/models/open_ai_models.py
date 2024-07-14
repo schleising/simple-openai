@@ -56,9 +56,20 @@ class OpenAIFunction(BaseModel):
     parameters: OpenAIParameters
 
 
+class OpenAITool(BaseModel):
+    type: str = "function"
+    function: OpenAIFunction
+
+
 class FunctionCall(BaseModel):
     name: str
     arguments: str
+
+
+class ToolCall(BaseModel):
+    id: str
+    type: str
+    function: FunctionCall
 
 
 class ChatMessage(BaseModel):
@@ -72,15 +83,15 @@ class Chat(BaseModel):
 
 
 class ChatRequest(Chat):
-    functions: list[OpenAIFunction] | None = None
-    function_call: str
+    tools: list[OpenAITool] | None = None
+    tool_choice: str
     model: str = "gpt-4o"
 
 
 class ResponseMessage(BaseModel):
     role: str
     content: str | None
-    function_call: FunctionCall | None = None
+    tool_calls: list[ToolCall] | None = None
 
 
 class Choice(BaseModel):

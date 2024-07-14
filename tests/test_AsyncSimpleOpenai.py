@@ -152,6 +152,10 @@ async def test_functions():
         ),
     )
 
+    tool = open_ai_models.OpenAITool(
+        function=func,
+    )
+
     async def scores():
         """Returns the football scores for today's matches"""
         print("Getting Matches...")
@@ -182,8 +186,8 @@ async def test_functions():
 
         return content
 
-    # Add a function
-    client.add_function(func, scores)
+    # Add a tool
+    client.add_tool(tool, scores)
 
     # Create a message to reuest football scores
     response = await client.get_chat_response("Where is Canada?", name="Dean")

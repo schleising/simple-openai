@@ -13,7 +13,7 @@ from . import constants
 from .models import open_ai_models
 from .responses import SimpleOpenaiResponse
 from . import chat_manager
-from . import function_manager
+from . import tool_manager
 
 
 class AsyncSimpleOpenai:
@@ -88,8 +88,8 @@ class AsyncSimpleOpenai:
             system_message, storage_path=storage_path, timezone=timezone
         )
 
-        # Create the function manager
-        self._function_manager = function_manager.FunctionManager()
+        # Create the tool manager
+        self._tool_manager = tool_manager.ToolManager()
 
     def update_system_message(self, system_message: str) -> None:
         """Update the system message
@@ -99,16 +99,16 @@ class AsyncSimpleOpenai:
         """
         self._chat.update_system_message(system_message)
 
-    def add_function(
-        self, function_definition: open_ai_models.OpenAIFunction, function: Callable
+    def add_tool(
+        self, tool_definition: open_ai_models.OpenAITool, function: Callable
     ) -> None:
-        """Add a function to the function manager
+        """Add a tool to the tool manager
 
         Args:
-            function_definition (open_ai_models.OpenAIFunction): The function definition
+            tool_definition (open_ai_models.OpenAITool): The tool definition
             function (Callable): The function to call
         """
-        self._function_manager.add_function(function_definition, function)
+        self._tool_manager.add_tool(tool_definition, function)
 
     async def get_chat_response(
         self,
@@ -141,14 +141,14 @@ class AsyncSimpleOpenai:
         # Create the request body
         request_body = open_ai_models.ChatRequest(
             messages=messages,
-            functions=self._function_manager.get_json_function_list(),
-            function_call="auto",
+            tools=self._tool_manager.get_json_tool_list(),
+            tool_choice="auto",
         )
 
-        # Delete the functions from the request body if there are no functions
-        if request_body.functions is None:
-            del request_body.functions
-            del request_body.function_call
+        # Delete the tools from the request body if there are no tools
+        if request_body.tools is None:
+            del request_body.tools
+            del request_body.tool_choice
 
         # Open a session
         async with aiohttp.ClientSession(
@@ -171,21 +171,21 @@ class AsyncSimpleOpenai:
                     # Check if a function was called
                     if (
                         response_body.choices[0].finish_reason
-                        == constants.OPEN_AI_FUNCTION_CALL
-                        and response_body.choices[0].message.function_call is not None
+                        == constants.OPEN_AI_TOOL_CALLS
+                        and response_body.choices[0].message.tool_calls is not None
                     ):
                         # Call the function
-                        new_prompt = await self._function_manager.async_call_function(
-                            response_body.choices[0].message.function_call.name
+                        new_prompt = await self._tool_manager.async_call_function(
+                            response_body.choices[0].message.tool_calls[0].function.name
                         )
 
                         # Add the response to the chat
                         self._chat.add_message(
                             open_ai_models.ChatMessage(
                                 role="assistant",
-                                content=response_body.choices[
-                                    0
-                                ].message.function_call.model_dump_json(),
+                                content=response_body.choices[0]
+                                .message.tool_calls[0]
+                                .function.model_dump_json(),
                                 name="Botto",
                             ),
                             chat_id=chat_id,
@@ -204,8 +204,8 @@ class AsyncSimpleOpenai:
                         # Create the request body
                         request_body = open_ai_models.ChatRequest(
                             messages=messages,
-                            functions=self._function_manager.get_json_function_list(),
-                            function_call="none",
+                            tools=self._tool_manager.get_json_tool_list(),
+                            tool_choice="none",
                         )
 
                         # Send the request
