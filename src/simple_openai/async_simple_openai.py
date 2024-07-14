@@ -187,7 +187,9 @@ class AsyncSimpleOpenai:
                                     0
                                 ].message.function_call.model_dump_json(),
                                 name="Botto",
-                            )
+                            ),
+                            chat_id=chat_id,
+                            add_date_time=add_date_time,
                         )
 
                         # Add the message to the chat
@@ -238,7 +240,9 @@ class AsyncSimpleOpenai:
                                         role="assistant",
                                         content=open_ai_response.message,
                                         name="Botto",
-                                    )
+                                    ),
+                                    chat_id=chat_id,
+                                    add_date_time=add_date_time,
                                 )
                             else:
                                 # Parse the error response body
@@ -267,7 +271,9 @@ class AsyncSimpleOpenai:
                                 role="assistant",
                                 content=open_ai_response.message,
                                 name="Botto",
-                            )
+                            ),
+                            chat_id=chat_id,
+                            add_date_time=add_date_time,
                         )
                 else:
                     # Parse the error response body
