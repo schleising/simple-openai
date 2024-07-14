@@ -89,10 +89,13 @@ class ChatResponse(BaseModel):
     usage: Usage
 
 class ImageRequest(BaseModel):
+    model: str = 'dall-e-3'
     prompt: str
     n: int = 1
     size: str = '1024x1024'
     response_format: str = 'url'
+    quality: str = 'hd'
+    style: str = 'vivid'
 
 class Url(BaseModel):
     url: str

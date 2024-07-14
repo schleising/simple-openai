@@ -192,18 +192,19 @@ class AsyncSimpleOpenai:
                 # Return the response
                 return open_ai_response
 
-    async def get_image_url(self, prompt: str) -> SimpleOpenaiResponse:
+    async def get_image_url(self, prompt: str, style: str = 'vivid') -> SimpleOpenaiResponse:
         """Get an image response from OpenAI
 
         Args:
             prompt (str): The prompt to use
+            style (str, optional): The style of the image. Defaults to 'vivid'.
 
         Returns:
             SimpleOpenaiResponse: The image response, the value of `success` should be checked before using the value of `message`
         """
             
         # Create the request body
-        request_body = open_ai_models.ImageRequest(prompt=prompt)
+        request_body = open_ai_models.ImageRequest(prompt=prompt, style=style)
 
         # Open a session
         async with aiohttp.ClientSession(headers=self._headers, base_url=constants.BASE_URL) as session:

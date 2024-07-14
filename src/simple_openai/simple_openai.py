@@ -184,18 +184,19 @@ class SimpleOpenai:
         # Return the response
         return open_ai_response
 
-    def get_image_url(self, prompt: str) -> SimpleOpenaiResponse:
+    def get_image_url(self, prompt: str, style: str = 'vivid') -> SimpleOpenaiResponse:
         """Get an image response from OpenAI
 
         Args:
             prompt (str): The prompt to use
+            style (str, optional): The style of the image. Defaults to 'vivid'.
 
         Returns:
             SimpleOpenaiResponse: The image response, the value of `success` should be checked before using the value of `message`
         """
             
         # Create the request body
-        request_body = open_ai_models.ImageRequest(prompt=prompt)
+        request_body = open_ai_models.ImageRequest(prompt=prompt, style=style)
 
         # Send the request
         response = requests.post(constants.FULL_IMAGE_URL, json=request_body.model_dump(), headers=self._headers)
