@@ -16,6 +16,7 @@ from dataclasses import dataclass
 
 from .models import open_ai_models
 
+
 @dataclass
 class OpenAIFunctionMapping:
     """OpenAI function mapping
@@ -26,19 +27,23 @@ class OpenAIFunctionMapping:
         function_definition (OpenAIFunction): The description of the function
         function (Callable): The function to call
     """
+
     function_definition: open_ai_models.OpenAIFunction
     function: Callable
+
 
 class FunctionManager:
     """Function manager
 
     This class manages the functions that can be called by the bot.
     """
-    
+
     def __init__(self) -> None:
         self._functions: dict[str, OpenAIFunctionMapping] = {}
 
-    def add_function(self, function_definition: open_ai_models.OpenAIFunction, function: Callable) -> None:
+    def add_function(
+        self, function_definition: open_ai_models.OpenAIFunction, function: Callable
+    ) -> None:
         """Add a function to the function manager
 
         Args:
@@ -46,7 +51,9 @@ class FunctionManager:
             function (Callable): The function to call
         """
         # Add the function to the function manager
-        self._functions[function_definition.name] = OpenAIFunctionMapping(function_definition, function)
+        self._functions[function_definition.name] = OpenAIFunctionMapping(
+            function_definition, function
+        )
 
     def get_json_function_list(self) -> list[open_ai_models.OpenAIFunction] | None:
         """Get the list of functions
@@ -55,7 +62,9 @@ class FunctionManager:
             list[open_ai_models.OpenAIFunction] | None: The list of functions or None if there are no functions
         """
         # Get the list of functions
-        functions = [function.function_definition for function in self._functions.values()]
+        functions = [
+            function.function_definition for function in self._functions.values()
+        ]
 
         if functions:
             # Return the list of functions
@@ -77,12 +86,14 @@ class FunctionManager:
         # Check that the function exists
         if function_name not in self._functions:
             # Return text to tell the bot it hallucinated the function
-            return f'Function {function_name} does not exist, please answer the last question again.'
+            return f"Function {function_name} does not exist, please answer the last question again."
         else:
             # Call the function
             return self._functions[function_name].function(**kwargs)
 
-    async def async_call_function(self, function_name: str, **kwargs: dict[str, Any]) -> str:
+    async def async_call_function(
+        self, function_name: str, **kwargs: dict[str, Any]
+    ) -> str:
         """Call a function
 
         Args:
@@ -95,7 +106,7 @@ class FunctionManager:
         # Check that the function exists
         if function_name not in self._functions:
             # Return text to tell the bot it hallucinated the function
-            return f'Function {function_name} does not exist, please answer the last question again.'
+            return f"Function {function_name} does not exist, please answer the last question again."
         else:
             # Call the function
             return await self._functions[function_name].function(**kwargs)

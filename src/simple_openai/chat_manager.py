@@ -5,7 +5,6 @@ This module contains the chat manager for the simple openai app.
 The chat manager is used to manage the chat messages and create the chat, it limits the number of messages in the chat to 21 by default and adds the system message to the start of the list.
 """
 
-
 from collections import deque
 from datetime import datetime
 from pathlib import Path
@@ -14,6 +13,7 @@ from zoneinfo import ZoneInfo
 
 from .models import open_ai_models
 from .constants import MAX_CHAT_HISTORY, CHAT_HISTORY_FILE, DEFAULT_CHAT_ID
+
 
 class ChatManager:
     """The chat manager
@@ -30,7 +30,14 @@ class ChatManager:
         storage_path (Path, optional): The path to the storage directory. Defaults to None.
         timezone (str, optional): The timezone to use for the chat messages. Defaults to 'UTC'.
     """
-    def __init__(self, system_message: str, max_messages: int = MAX_CHAT_HISTORY, storage_path: Path | None = None, timezone: str = 'UTC') -> None:
+
+    def __init__(
+        self,
+        system_message: str,
+        max_messages: int = MAX_CHAT_HISTORY,
+        storage_path: Path | None = None,
+        timezone: str = "UTC",
+    ) -> None:
         self._system_message = system_message
         self._max_messages = max_messages
         self._storage_path = storage_path
@@ -43,9 +50,11 @@ class ChatManager:
             # Try to load the chat history
             try:
                 # Load the chat history
-                with open(self._storage_path / CHAT_HISTORY_FILE, 'rb') as f:
+                with open(self._storage_path / CHAT_HISTORY_FILE, "rb") as f:
                     # Load the chat history
-                    self._messages: dict[str, deque[open_ai_models.ChatMessage]] = pickle.load(f)
+                    self._messages: dict[str, deque[open_ai_models.ChatMessage]] = (
+                        pickle.load(f)
+                    )
             except FileNotFoundError:
                 # initialise a deque of messages not including the system message
                 self._messages: dict[str, deque[open_ai_models.ChatMessage]] = {}
@@ -61,7 +70,12 @@ class ChatManager:
         """
         self._system_message = system_message
 
-    def add_message(self, message: open_ai_models.ChatMessage, chat_id: str = DEFAULT_CHAT_ID, add_date_time: bool = False) -> open_ai_models.Chat:
+    def add_message(
+        self,
+        message: open_ai_models.ChatMessage,
+        chat_id: str = DEFAULT_CHAT_ID,
+        add_date_time: bool = False,
+    ) -> open_ai_models.Chat:
         """Add a message to the chat
 
         Args:
@@ -82,19 +96,24 @@ class ChatManager:
         # If a storage path is provided, save the chat history
         if self._storage_path is not None:
             # Save the chat history
-            with open(self._storage_path / CHAT_HISTORY_FILE, 'wb') as f:
+            with open(self._storage_path / CHAT_HISTORY_FILE, "wb") as f:
                 pickle.dump(self._messages, f)
 
         # Update the system message with the date and time in iso format if required
         if add_date_time:
-            system_message = f'The date and time is {datetime.now(tz=self._timezone).isoformat()} give answers in timezone {self._timezone.key}.\n{self._system_message}'
+            system_message = f"The date and time is {datetime.now(tz=self._timezone).isoformat()} give answers in timezone {self._timezone.key}.\n{self._system_message}"
         else:
             system_message = self._system_message
 
         # Create the chat adding the system message to the start
-        chat = open_ai_models.Chat(messages=[
-            open_ai_models.ChatMessage(role='system', content=system_message, name='System')
-        ] + list(self._messages[chat_id]))
+        chat = open_ai_models.Chat(
+            messages=[
+                open_ai_models.ChatMessage(
+                    role="system", content=system_message, name="System"
+                )
+            ]
+            + list(self._messages[chat_id])
+        )
 
         # Return the chat
         return chat

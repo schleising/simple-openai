@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+
 @dataclass
 class SimpleOpenaiResponse:
     """Simple OpenAI API response
@@ -19,5 +20,6 @@ class SimpleOpenaiResponse:
         success (bool): True if the request was successful, False otherwise
         message (str): The message of the response
     """
+
     success: bool
     message: str

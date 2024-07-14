@@ -9,8 +9,9 @@ The models are based on the [OpenAI API documentation](https://beta.openai.com/d
 
 from pydantic import BaseModel
 
+
 class OpenAIParameter(BaseModel):
-    """ OpenAI parameter
+    """OpenAI parameter
 
     This class represents an OpenAI parameter.
 
@@ -18,11 +19,13 @@ class OpenAIParameter(BaseModel):
         type (str): The type of the parameter
         description (str): The description of the parameter, used by OpenAI to decide whether to use the parameter
     """
+
     type: str
     description: str
 
+
 class OpenAIParameters(BaseModel):
-    """ OpenAI parameters
+    """OpenAI parameters
 
     This class represents a list of OpenAI parameters.
 
@@ -31,12 +34,14 @@ class OpenAIParameters(BaseModel):
         properties (dict[str, OpenAIParameter]): The parameters
         required (list[str], optional): The required parameters. Defaults to [].
     """
-    type: str = 'object'
+
+    type: str = "object"
     properties: dict[str, OpenAIParameter]
     required: list[str] = []
 
+
 class OpenAIFunction(BaseModel):
-    """ OpenAI function
+    """OpenAI function
 
     This class represents an OpenAI function.
 
@@ -45,41 +50,50 @@ class OpenAIFunction(BaseModel):
         description (str): The description of the function, used by OpenAI to decide whether to use the function
         parameters (OpenAIParameters): The parameters of the function
     """
+
     name: str
     description: str
     parameters: OpenAIParameters
+
 
 class FunctionCall(BaseModel):
     name: str
     arguments: str
 
+
 class ChatMessage(BaseModel):
     role: str
     content: str
-    name: str = 'Botto'
+    name: str = "Botto"
+
 
 class Chat(BaseModel):
     messages: list[ChatMessage]
 
+
 class ChatRequest(Chat):
     functions: list[OpenAIFunction] | None = None
     function_call: str
-    model: str = 'gpt-4o'
+    model: str = "gpt-4o"
+
 
 class ResponseMessage(BaseModel):
     role: str
     content: str | None
     function_call: FunctionCall | None = None
 
+
 class Choice(BaseModel):
     index: int
     message: ResponseMessage
     finish_reason: str
 
+
 class Usage(BaseModel):
     prompt_tokens: int
     completion_tokens: int
     total_tokens: int
+
 
 class ChatResponse(BaseModel):
     id: str
@@ -88,27 +102,32 @@ class ChatResponse(BaseModel):
     choices: list[Choice]
     usage: Usage
 
+
 class ImageRequest(BaseModel):
-    model: str = 'dall-e-3'
+    model: str = "dall-e-3"
     prompt: str
     n: int = 1
-    size: str = '1024x1024'
-    response_format: str = 'url'
-    quality: str = 'hd'
-    style: str = 'vivid'
+    size: str = "1024x1024"
+    response_format: str = "url"
+    quality: str = "hd"
+    style: str = "vivid"
+
 
 class Url(BaseModel):
     url: str
 
+
 class ImageResponse(BaseModel):
     created: int
     data: list[Url]
+
 
 class Error(BaseModel):
     code: str | None
     message: str
     param: str | None
     type: str
+
 
 class ErrorResponse(BaseModel):
     error: Error
