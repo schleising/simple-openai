@@ -122,6 +122,7 @@ class AsyncSimpleOpenai:
         # Delete the functions from the request body if there are no functions
         if request_body.functions is None:
             del request_body.functions
+            del request_body.function_call
 
         # Open a session
         async with aiohttp.ClientSession(headers=self._headers, base_url=constants.BASE_URL) as session:

@@ -120,6 +120,7 @@ class SimpleOpenai:
         # Delete the functions from the request body if there are no functions
         if request_body.functions is None:
             del request_body.functions
+            del request_body.function_call
 
         # Send the request
         response1 = requests.post(constants.FULL_CHAT_URL, json=request_body.model_dump(), headers=self._headers)
