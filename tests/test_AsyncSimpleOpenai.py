@@ -124,6 +124,20 @@ async def load_and_summarise_chat():
     print(f"Group 2 Summary: {response.message}")
     print()
 
+def test_chat_history():
+    # Create the client
+    client = AsyncSimpleOpenai(api_key, "", Path("storage"))
+
+    # Test the chat history
+    chat = client.get_chat_history("Group 1")
+    print("Group 1 Chat:")
+    print(chat)
+    print()
+
+    chat = client.get_chat_history("Group 2")
+    print("Group 2 Chat:")
+    print(chat)
+
 
 async def test_functions():
     # Create a system message
@@ -216,6 +230,8 @@ async def main():
     # Test functions
     await test_functions()
 
+    # Test chat history
+    test_chat_history()
 
 if __name__ == "__main__":
     # Run the main function

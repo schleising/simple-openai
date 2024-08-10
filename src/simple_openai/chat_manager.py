@@ -117,3 +117,27 @@ class ChatManager:
 
         # Return the chat
         return chat
+
+    def get_chat(self, chat_id: str = DEFAULT_CHAT_ID) -> str:
+        """Get the chat
+
+        Args:
+            chat_id (str, optional): The ID of the chat to get. Defaults to DEFAULT_CHAT_ID.
+
+        Returns:
+            str: The chat
+        """
+        # If the chat ID is not in the messages, create a new deque
+        if chat_id not in self._messages:
+            return ""
+        
+        # Get the chat
+        chat = self._messages[chat_id]
+
+        # Parse the chat to a string with each name and message on a new line
+        chat_str = "\n".join(
+            [f"{message.name}: {message.content}" for message in chat]
+        )
+
+        # Return the chat
+        return chat_str

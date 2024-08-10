@@ -118,6 +118,21 @@ def load_and_summarise_chat():
     print()
 
 
+def test_chat_history():
+    # Create the client
+    client = SimpleOpenai(api_key, "", Path("storage"))
+
+    # Test the chat history
+    chat = client.get_chat_history("Group 1")
+    print("Group 1 Chat:")
+    print(chat)
+    print()
+
+    chat = client.get_chat_history("Group 2")
+    print("Group 2 Chat:")
+    print(chat)
+
+
 def test_functions():
     # Create a system message
     system_message = """
@@ -203,6 +218,9 @@ def main():
 
     # Test functions
     test_functions()
+
+    # Test chat history
+    test_chat_history()
 
 
 if __name__ == "__main__":
