@@ -44,5 +44,5 @@ nav:
     - AsyncSimpleOpenai: simple_openai/async_simple_openai.md
     - SimpleOpenaiResponse: simple_openai/responses.md
     - ChatManager: simple_openai/chat_manager.md
-    - FunctionManager: simple_openai/function_manager.md
+    - ToolManager: simple_openai/tool_manager.md
     - Public Models: simple_openai/public_models.md
