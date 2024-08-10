@@ -20,15 +20,15 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.28">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.31">
     
     
       
-        <title>FunctionManager - Simple Openai</title>
+        <title>ToolManager - Simple Openai</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.6543a935.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.3cba04c6.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
@@ -76,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#src.simple_openai.function_manager" class="md-skip">
+        <a href="#src.simple_openai.tool_manager" class="md-skip">
           Skip to content
         </a>
       
@@ -112,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              FunctionManager
+              ToolManager
             
           </span>
         </div>
@@ -166,7 +166,7 @@
         <a href="https://github.com/schleising/simple-openai" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
   </div>
   <div class="md-source__repository">
     schleising/simple-openai
@@ -212,7 +212,7 @@
       <a href="https://github.com/schleising/simple-openai" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
   </div>
   <div class="md-source__repository">
     schleising/simple-openai
@@ -381,7 +381,7 @@
           
   
   <span class="md-ellipsis">
-    FunctionManager
+    ToolManager
   </span>
   
 
@@ -392,7 +392,7 @@
         
   
   <span class="md-ellipsis">
-    FunctionManager
+    ToolManager
   </span>
   
 
@@ -412,35 +412,44 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#src.simple_openai.function_manager" class="md-nav__link">
+  <a href="#src.simple_openai.tool_manager" class="md-nav__link">
     <span class="md-ellipsis">
-      function_manager
+      tool_manager
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#src.simple_openai.function_manager.FunctionManager" class="md-nav__link">
+  <a href="#src.simple_openai.tool_manager.OpenAIToolMapping" class="md-nav__link">
     <span class="md-ellipsis">
-      FunctionManager
+      OpenAIToolMapping
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="FunctionManager">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#src.simple_openai.tool_manager.ToolManager" class="md-nav__link">
+    <span class="md-ellipsis">
+      ToolManager
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ToolManager">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#src.simple_openai.function_manager.FunctionManager.add_function" class="md-nav__link">
+  <a href="#src.simple_openai.tool_manager.ToolManager.add_tool" class="md-nav__link">
     <span class="md-ellipsis">
-      add_function
+      add_tool
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#src.simple_openai.function_manager.FunctionManager.async_call_function" class="md-nav__link">
+  <a href="#src.simple_openai.tool_manager.ToolManager.async_call_function" class="md-nav__link">
     <span class="md-ellipsis">
       async_call_function
     </span>
@@ -449,7 +458,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#src.simple_openai.function_manager.FunctionManager.call_function" class="md-nav__link">
+  <a href="#src.simple_openai.tool_manager.ToolManager.call_function" class="md-nav__link">
     <span class="md-ellipsis">
       call_function
     </span>
@@ -458,9 +467,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#src.simple_openai.function_manager.FunctionManager.get_json_function_list" class="md-nav__link">
+  <a href="#src.simple_openai.tool_manager.ToolManager.get_json_tool_list" class="md-nav__link">
     <span class="md-ellipsis">
-      get_json_function_list
+      get_json_tool_list
     </span>
   </a>
   
@@ -468,15 +477,6 @@
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#src.simple_openai.function_manager.OpenAIFunctionMapping" class="md-nav__link">
-    <span class="md-ellipsis">
-      OpenAIFunctionMapping
-    </span>
-  </a>
   
 </li>
       
@@ -542,35 +542,44 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#src.simple_openai.function_manager" class="md-nav__link">
+  <a href="#src.simple_openai.tool_manager" class="md-nav__link">
     <span class="md-ellipsis">
-      function_manager
+      tool_manager
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#src.simple_openai.function_manager.FunctionManager" class="md-nav__link">
+  <a href="#src.simple_openai.tool_manager.OpenAIToolMapping" class="md-nav__link">
     <span class="md-ellipsis">
-      FunctionManager
+      OpenAIToolMapping
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="FunctionManager">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#src.simple_openai.tool_manager.ToolManager" class="md-nav__link">
+    <span class="md-ellipsis">
+      ToolManager
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ToolManager">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#src.simple_openai.function_manager.FunctionManager.add_function" class="md-nav__link">
+  <a href="#src.simple_openai.tool_manager.ToolManager.add_tool" class="md-nav__link">
     <span class="md-ellipsis">
-      add_function
+      add_tool
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#src.simple_openai.function_manager.FunctionManager.async_call_function" class="md-nav__link">
+  <a href="#src.simple_openai.tool_manager.ToolManager.async_call_function" class="md-nav__link">
     <span class="md-ellipsis">
       async_call_function
     </span>
@@ -579,7 +588,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#src.simple_openai.function_manager.FunctionManager.call_function" class="md-nav__link">
+  <a href="#src.simple_openai.tool_manager.ToolManager.call_function" class="md-nav__link">
     <span class="md-ellipsis">
       call_function
     </span>
@@ -588,9 +597,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#src.simple_openai.function_manager.FunctionManager.get_json_function_list" class="md-nav__link">
+  <a href="#src.simple_openai.tool_manager.ToolManager.get_json_tool_list" class="md-nav__link">
     <span class="md-ellipsis">
-      get_json_function_list
+      get_json_tool_list
     </span>
   </a>
   
@@ -598,15 +607,6 @@
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#src.simple_openai.function_manager.OpenAIFunctionMapping" class="md-nav__link">
-    <span class="md-ellipsis">
-      OpenAIFunctionMapping
-    </span>
-  </a>
   
 </li>
       
@@ -628,21 +628,21 @@
   
 
 
-  <h1>FunctionManager</h1>
+  <h1>ToolManager</h1>
 
 <div class="doc doc-object doc-module">
 
 
 
-<a id="src.simple_openai.function_manager"></a>
+<a id="src.simple_openai.tool_manager"></a>
     <div class="doc doc-contents first">
 
-      <p>This module contains the function manager.</p>
-<p>The function manager is used to manage the functions that can be called by the bot.</p>
-<p>Define a function using the <a href="../public_models/#src.simple_openai.models.open_ai_models.OpenAIFunction">OpenAIFunction</a> model from models.py and add it to the function manager using the add_function method.</p>
-<p>The function should return a string.</p>
-<p>The function can optionally take keyword arguments, the keyword arguments should be defined in the OpenAIFunction model.</p>
-<p>Call the function using the call_function method for synchronous functions or the async_call_function method for asynchronous functions.</p>
+      <p>This module contains the tool manager.</p>
+<p>The tool manager is used to manage the toold that can be called by the bot.</p>
+<p>Define a function using the <a href="../public_models/#src.simple_openai.models.open_ai_models.OpenAITool">OpenAITool</a> model from models.py and add it to the tool manager using the add_tool method.</p>
+<p>The tool should return a string.</p>
+<p>The tool can optionally take keyword arguments, the keyword arguments should be defined in the OpenAITool model.</p>
+<p>Call the tool using the call_function method for synchronous functions or the async_call_function method for asynchronous.</p>
 
 
 
@@ -659,21 +659,135 @@
 
 
 
-<h2 id="src.simple_openai.function_manager.FunctionManager" class="doc doc-heading">
-            <code>FunctionManager</code>
+<h2 id="src.simple_openai.tool_manager.OpenAIToolMapping" class="doc doc-heading">
+            <code>OpenAIToolMapping</code>
 
 
-<a href="#src.simple_openai.function_manager.FunctionManager" class="headerlink" title="Permanent link">&para;</a></h2>
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#src.simple_openai.tool_manager.OpenAIToolMapping" class="headerlink" title="Permanent link">&para;</a></h2>
 
 
     <div class="doc doc-contents ">
 
 
-      <p>Function manager</p>
-<p>This class manages the functions that can be called by the bot.</p>
+      <p>OpenAI tool mapping</p>
+<p>This class represents an OpenAI tool mapping.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>tool_definition</code></td>
+            <td>
+                  <code>OpenAITool</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The description of the tool</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>function</code></td>
+            <td>
+                  <code><span title="typing.Callable">Callable</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The function to call</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
               <details class="quote">
-                <summary>Source code in <code>src/simple_openai/function_manager.py</code></summary>
+                <summary>Source code in <code>src/simple_openai/tool_manager.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">OpenAIToolMapping</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;OpenAI tool mapping</span>
+
+<span class="sd">    This class represents an OpenAI tool mapping.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        tool_definition (OpenAITool): The description of the tool</span>
+<span class="sd">        function (Callable): The function to call</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">tool_definition</span><span class="p">:</span> <span class="n">open_ai_models</span><span class="o">.</span><span class="n">OpenAITool</span>
+    <span class="n">function</span><span class="p">:</span> <span class="n">Callable</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="src.simple_openai.tool_manager.ToolManager" class="doc doc-heading">
+            <code>ToolManager</code>
+
+
+<a href="#src.simple_openai.tool_manager.ToolManager" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+
+      <p>Tool manager</p>
+<p>This class manages the tools that can be called by the bot.</p>
+
+              <details class="quote">
+                <summary>Source code in <code>src/simple_openai/tool_manager.py</code></summary>
                 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 35</span>
 <span class="normal"> 36</span>
 <span class="normal"> 37</span>
@@ -749,45 +863,41 @@
 <span class="normal">107</span>
 <span class="normal">108</span>
 <span class="normal">109</span>
-<span class="normal">110</span>
-<span class="normal">111</span>
-<span class="normal">112</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">FunctionManager</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function manager</span>
+<span class="normal">110</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ToolManager</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Tool manager</span>
 
-<span class="sd">    This class manages the functions that can be called by the bot.</span>
+<span class="sd">    This class manages the tools that can be called by the bot.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_functions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">OpenAIFunctionMapping</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">OpenAIToolMapping</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 
-    <span class="k">def</span> <span class="nf">add_function</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">function_definition</span><span class="p">:</span> <span class="n">open_ai_models</span><span class="o">.</span><span class="n">OpenAIFunction</span><span class="p">,</span> <span class="n">function</span><span class="p">:</span> <span class="n">Callable</span>
+    <span class="k">def</span> <span class="nf">add_tool</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">tool_definition</span><span class="p">:</span> <span class="n">open_ai_models</span><span class="o">.</span><span class="n">OpenAITool</span><span class="p">,</span> <span class="n">function</span><span class="p">:</span> <span class="n">Callable</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a function to the function manager</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a tool to the tool manager</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            function_definition (OpenAIFunction): The function definition</span>
+<span class="sd">            tool_definition (OpenAITool): The tool definition</span>
 <span class="sd">            function (Callable): The function to call</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Add the function to the function manager</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_functions</span><span class="p">[</span><span class="n">function_definition</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">OpenAIFunctionMapping</span><span class="p">(</span>
-            <span class="n">function_definition</span><span class="p">,</span> <span class="n">function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="p">[</span><span class="n">tool_definition</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">OpenAIToolMapping</span><span class="p">(</span>
+            <span class="n">tool_definition</span><span class="p">,</span> <span class="n">function</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">get_json_function_list</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">open_ai_models</span><span class="o">.</span><span class="n">OpenAIFunction</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the list of functions</span>
+    <span class="k">def</span> <span class="nf">get_json_tool_list</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">open_ai_models</span><span class="o">.</span><span class="n">OpenAITool</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the list of tools</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            list[open_ai_models.OpenAIFunction] | None: The list of functions or None if there are no functions</span>
+<span class="sd">            list[open_ai_models.OpenAITool] | None: The list of tools or None if there are no tools</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Get the list of functions</span>
-        <span class="n">functions</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">function</span><span class="o">.</span><span class="n">function_definition</span> <span class="k">for</span> <span class="n">function</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_functions</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
-        <span class="p">]</span>
+        <span class="n">tools</span> <span class="o">=</span> <span class="p">[</span><span class="n">tool</span><span class="o">.</span><span class="n">tool_definition</span> <span class="k">for</span> <span class="n">tool</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
 
-        <span class="k">if</span> <span class="n">functions</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">tools</span><span class="p">:</span>
             <span class="c1"># Return the list of functions</span>
-            <span class="k">return</span> <span class="n">functions</span>
+            <span class="k">return</span> <span class="n">tools</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Return None</span>
             <span class="k">return</span> <span class="kc">None</span>
@@ -803,12 +913,12 @@
 <span class="sd">            str: The result of the function</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Check that the function exists</span>
-        <span class="k">if</span> <span class="n">function_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_functions</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">function_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="p">:</span>
             <span class="c1"># Return text to tell the bot it hallucinated the function</span>
-            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Function </span><span class="si">{</span><span class="n">function_name</span><span class="si">}</span><span class="s2"> does not exist, please answer the last question again.&quot;</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Tool </span><span class="si">{</span><span class="n">function_name</span><span class="si">}</span><span class="s2"> does not exist, please answer the last question again.&quot;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Call the function</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_functions</span><span class="p">[</span><span class="n">function_name</span><span class="p">]</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="p">[</span><span class="n">function_name</span><span class="p">]</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">async</span> <span class="k">def</span> <span class="nf">async_call_function</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">function_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
@@ -823,12 +933,12 @@
 <span class="sd">            str: The result of the function</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Check that the function exists</span>
-        <span class="k">if</span> <span class="n">function_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_functions</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">function_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="p">:</span>
             <span class="c1"># Return text to tell the bot it hallucinated the function</span>
             <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Function </span><span class="si">{</span><span class="n">function_name</span><span class="si">}</span><span class="s2"> does not exist, please answer the last question again.&quot;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Call the function</span>
-            <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_functions</span><span class="p">[</span><span class="n">function_name</span><span class="p">]</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="p">[</span><span class="n">function_name</span><span class="p">]</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -847,15 +957,15 @@
 <div class="doc doc-object doc-function">
 
 
-<h3 id="src.simple_openai.function_manager.FunctionManager.add_function" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">add_function</span><span class="p">(</span><span class="n">function_definition</span><span class="p">,</span> <span class="n">function</span><span class="p">)</span></code>
+<h3 id="src.simple_openai.tool_manager.ToolManager.add_tool" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">add_tool</span><span class="p">(</span><span class="n">tool_definition</span><span class="p">,</span> <span class="n">function</span><span class="p">)</span></code>
 
-<a href="#src.simple_openai.function_manager.FunctionManager.add_function" class="headerlink" title="Permanent link">&para;</a></h3>
+<a href="#src.simple_openai.tool_manager.ToolManager.add_tool" class="headerlink" title="Permanent link">&para;</a></h3>
 
 
     <div class="doc doc-contents ">
 
-      <p>Add a function to the function manager</p>
+      <p>Add a tool to the tool manager</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -870,13 +980,13 @@
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td><code>function_definition</code></td>
+            <td><code>tool_definition</code></td>
             <td>
-                  <code>OpenAIFunction</code>
+                  <code>OpenAITool</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The function definition</p>
+                <p>The tool definition</p>
               </div>
             </td>
             <td>
@@ -901,7 +1011,7 @@
     </table>
 
             <details class="quote">
-              <summary>Source code in <code>src/simple_openai/function_manager.py</code></summary>
+              <summary>Source code in <code>src/simple_openai/tool_manager.py</code></summary>
               <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">44</span>
 <span class="normal">45</span>
 <span class="normal">46</span>
@@ -914,18 +1024,18 @@
 <span class="normal">53</span>
 <span class="normal">54</span>
 <span class="normal">55</span>
-<span class="normal">56</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_function</span><span class="p">(</span>
-    <span class="bp">self</span><span class="p">,</span> <span class="n">function_definition</span><span class="p">:</span> <span class="n">open_ai_models</span><span class="o">.</span><span class="n">OpenAIFunction</span><span class="p">,</span> <span class="n">function</span><span class="p">:</span> <span class="n">Callable</span>
+<span class="normal">56</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_tool</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span> <span class="n">tool_definition</span><span class="p">:</span> <span class="n">open_ai_models</span><span class="o">.</span><span class="n">OpenAITool</span><span class="p">,</span> <span class="n">function</span><span class="p">:</span> <span class="n">Callable</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Add a function to the function manager</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Add a tool to the tool manager</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        function_definition (OpenAIFunction): The function definition</span>
+<span class="sd">        tool_definition (OpenAITool): The tool definition</span>
 <span class="sd">        function (Callable): The function to call</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Add the function to the function manager</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_functions</span><span class="p">[</span><span class="n">function_definition</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">OpenAIFunctionMapping</span><span class="p">(</span>
-        <span class="n">function_definition</span><span class="p">,</span> <span class="n">function</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="p">[</span><span class="n">tool_definition</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">OpenAIToolMapping</span><span class="p">(</span>
+        <span class="n">tool_definition</span><span class="p">,</span> <span class="n">function</span>
     <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
@@ -936,14 +1046,14 @@
 <div class="doc doc-object doc-function">
 
 
-<h3 id="src.simple_openai.function_manager.FunctionManager.async_call_function" class="doc doc-heading">
+<h3 id="src.simple_openai.tool_manager.ToolManager.async_call_function" class="doc doc-heading">
             <code class="highlight language-python"><span class="n">async_call_function</span><span class="p">(</span><span class="n">function_name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
 
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
-<a href="#src.simple_openai.function_manager.FunctionManager.async_call_function" class="headerlink" title="Permanent link">&para;</a></h3>
+<a href="#src.simple_openai.tool_manager.ToolManager.async_call_function" class="headerlink" title="Permanent link">&para;</a></h3>
 
 
     <div class="doc doc-contents ">
@@ -1017,8 +1127,10 @@
     </table>
 
             <details class="quote">
-              <summary>Source code in <code>src/simple_openai/function_manager.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 94</span>
+              <summary>Source code in <code>src/simple_openai/tool_manager.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
 <span class="normal"> 95</span>
 <span class="normal"> 96</span>
 <span class="normal"> 97</span>
@@ -1034,9 +1146,7 @@
 <span class="normal">107</span>
 <span class="normal">108</span>
 <span class="normal">109</span>
-<span class="normal">110</span>
-<span class="normal">111</span>
-<span class="normal">112</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">async</span> <span class="k">def</span> <span class="nf">async_call_function</span><span class="p">(</span>
+<span class="normal">110</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">async</span> <span class="k">def</span> <span class="nf">async_call_function</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span> <span class="n">function_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Call a function</span>
@@ -1049,12 +1159,12 @@
 <span class="sd">        str: The result of the function</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Check that the function exists</span>
-    <span class="k">if</span> <span class="n">function_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_functions</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">function_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="p">:</span>
         <span class="c1"># Return text to tell the bot it hallucinated the function</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Function </span><span class="si">{</span><span class="n">function_name</span><span class="si">}</span><span class="s2"> does not exist, please answer the last question again.&quot;</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># Call the function</span>
-        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_functions</span><span class="p">[</span><span class="n">function_name</span><span class="p">]</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="p">[</span><span class="n">function_name</span><span class="p">]</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -1064,10 +1174,10 @@
 <div class="doc doc-object doc-function">
 
 
-<h3 id="src.simple_openai.function_manager.FunctionManager.call_function" class="doc doc-heading">
+<h3 id="src.simple_openai.tool_manager.ToolManager.call_function" class="doc doc-heading">
             <code class="highlight language-python"><span class="n">call_function</span><span class="p">(</span><span class="n">function_name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
 
-<a href="#src.simple_openai.function_manager.FunctionManager.call_function" class="headerlink" title="Permanent link">&para;</a></h3>
+<a href="#src.simple_openai.tool_manager.ToolManager.call_function" class="headerlink" title="Permanent link">&para;</a></h3>
 
 
     <div class="doc doc-contents ">
@@ -1141,8 +1251,10 @@
     </table>
 
             <details class="quote">
-              <summary>Source code in <code>src/simple_openai/function_manager.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">76</span>
+              <summary>Source code in <code>src/simple_openai/tool_manager.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
 <span class="normal">77</span>
 <span class="normal">78</span>
 <span class="normal">79</span>
@@ -1156,9 +1268,7 @@
 <span class="normal">87</span>
 <span class="normal">88</span>
 <span class="normal">89</span>
-<span class="normal">90</span>
-<span class="normal">91</span>
-<span class="normal">92</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">call_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">90</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">call_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Call a function</span>
 
 <span class="sd">    Args:</span>
@@ -1169,12 +1279,12 @@
 <span class="sd">        str: The result of the function</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Check that the function exists</span>
-    <span class="k">if</span> <span class="n">function_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_functions</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">function_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="p">:</span>
         <span class="c1"># Return text to tell the bot it hallucinated the function</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Function </span><span class="si">{</span><span class="n">function_name</span><span class="si">}</span><span class="s2"> does not exist, please answer the last question again.&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Tool </span><span class="si">{</span><span class="n">function_name</span><span class="si">}</span><span class="s2"> does not exist, please answer the last question again.&quot;</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># Call the function</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_functions</span><span class="p">[</span><span class="n">function_name</span><span class="p">]</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="p">[</span><span class="n">function_name</span><span class="p">]</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -1184,15 +1294,15 @@
 <div class="doc doc-object doc-function">
 
 
-<h3 id="src.simple_openai.function_manager.FunctionManager.get_json_function_list" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">get_json_function_list</span><span class="p">()</span></code>
+<h3 id="src.simple_openai.tool_manager.ToolManager.get_json_tool_list" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">get_json_tool_list</span><span class="p">()</span></code>
 
-<a href="#src.simple_openai.function_manager.FunctionManager.get_json_function_list" class="headerlink" title="Permanent link">&para;</a></h3>
+<a href="#src.simple_openai.tool_manager.ToolManager.get_json_tool_list" class="headerlink" title="Permanent link">&para;</a></h3>
 
 
     <div class="doc doc-contents ">
 
-      <p>Get the list of functions</p>
+      <p>Get the list of tools</p>
 
 
     <p><span class="doc-section-title">Returns:</span></p>
@@ -1206,11 +1316,11 @@
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code>list[<a class="autorefs autorefs-internal" title="src.simple_openai.models.open_ai_models.OpenAIFunction" href="../public_models/#src.simple_openai.models.open_ai_models.OpenAIFunction">OpenAIFunction</a>] | None</code>
+                  <code>list[<span title="src.simple_openai.models.open_ai_models.OpenAITool">OpenAITool</span>] | None</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>list[open_ai_models.OpenAIFunction] | None: The list of functions or None if there are no functions</p>
+                <p>list[open_ai_models.OpenAITool] | None: The list of tools or None if there are no tools</p>
               </div>
             </td>
           </tr>
@@ -1218,7 +1328,7 @@
     </table>
 
             <details class="quote">
-              <summary>Source code in <code>src/simple_openai/function_manager.py</code></summary>
+              <summary>Source code in <code>src/simple_openai/tool_manager.py</code></summary>
               <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">58</span>
 <span class="normal">59</span>
 <span class="normal">60</span>
@@ -1233,22 +1343,18 @@
 <span class="normal">69</span>
 <span class="normal">70</span>
 <span class="normal">71</span>
-<span class="normal">72</span>
-<span class="normal">73</span>
-<span class="normal">74</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_json_function_list</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">open_ai_models</span><span class="o">.</span><span class="n">OpenAIFunction</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the list of functions</span>
+<span class="normal">72</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_json_tool_list</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">open_ai_models</span><span class="o">.</span><span class="n">OpenAITool</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the list of tools</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        list[open_ai_models.OpenAIFunction] | None: The list of functions or None if there are no functions</span>
+<span class="sd">        list[open_ai_models.OpenAITool] | None: The list of tools or None if there are no tools</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Get the list of functions</span>
-    <span class="n">functions</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="n">function</span><span class="o">.</span><span class="n">function_definition</span> <span class="k">for</span> <span class="n">function</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_functions</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
-    <span class="p">]</span>
+    <span class="n">tools</span> <span class="o">=</span> <span class="p">[</span><span class="n">tool</span><span class="o">.</span><span class="n">tool_definition</span> <span class="k">for</span> <span class="n">tool</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
 
-    <span class="k">if</span> <span class="n">functions</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">tools</span><span class="p">:</span>
         <span class="c1"># Return the list of functions</span>
-        <span class="k">return</span> <span class="n">functions</span>
+        <span class="k">return</span> <span class="n">tools</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># Return None</span>
         <span class="k">return</span> <span class="kc">None</span>
@@ -1257,120 +1363,6 @@
     </div>
 
 </div>
-
-
-
-  </div>
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-class">
-
-
-
-<h2 id="src.simple_openai.function_manager.OpenAIFunctionMapping" class="doc doc-heading">
-            <code>OpenAIFunctionMapping</code>
-
-
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
-  </span>
-
-<a href="#src.simple_openai.function_manager.OpenAIFunctionMapping" class="headerlink" title="Permanent link">&para;</a></h2>
-
-
-    <div class="doc doc-contents ">
-
-
-      <p>OpenAI function mapping</p>
-<p>This class represents an OpenAI function mapping.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td><code>function_definition</code></td>
-            <td>
-                  <code>OpenAIFunction</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>The description of the function</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code>function</code></td>
-            <td>
-                  <code><span title="typing.Callable">Callable</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>The function to call</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-              <details class="quote">
-                <summary>Source code in <code>src/simple_openai/function_manager.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span>
-<span class="k">class</span> <span class="nc">OpenAIFunctionMapping</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;OpenAI function mapping</span>
-
-<span class="sd">    This class represents an OpenAI function mapping.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        function_definition (OpenAIFunction): The description of the function</span>
-<span class="sd">        function (Callable): The function to call</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">function_definition</span><span class="p">:</span> <span class="n">open_ai_models</span><span class="o">.</span><span class="n">OpenAIFunction</span>
-    <span class="n">function</span><span class="p">:</span> <span class="n">Callable</span>
-</code></pre></div></td></tr></table></div>
-              </details>
-
-
-
-  <div class="doc doc-children">
-
-
-
-
-
-
-
-
 
 
 
