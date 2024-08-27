@@ -134,9 +134,9 @@ class ChatManager:
         # Get the chat
         chat = self._messages[chat_id]
 
-        # Parse the chat to a string with each name and message on a new line
+        # Parse the most recent 10 chat messages to a string with each name and message on a new line
         chat_str = "\n".join(
-            [f"{message.name}: {message.content}" for message in chat]
+            [f"{message.name}: {message.content}" for message in list(chat)[-10:]]
         )
 
         # Return the chat
