@@ -314,7 +314,6 @@ class SimpleOpenai:
         # Return the response
         return response
 
-
     def get_chat_history(self, chat_id: str) -> str:
         """Get the chat history
 
@@ -326,6 +325,21 @@ class SimpleOpenai:
         """
         # Get the chat history
         chat_history = self._chat.get_chat(chat_id)
+
+        # Return the chat history
+        return chat_history
+
+    def get_truncated_chat_history(self, chat_id: str) -> str:
+        """Get the truncated chat history, limited to the last 4,000 characters
+
+        Args:
+            chat_id (str): The ID of the chat
+
+        Returns:
+            str: The truncated chat history
+        """
+        # Get the chat history
+        chat_history = self._chat.get_truncated_chat(chat_id)
 
         # Return the chat history
         return chat_history

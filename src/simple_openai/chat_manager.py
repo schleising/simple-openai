@@ -130,14 +130,37 @@ class ChatManager:
         # If the chat ID is not in the messages, create a new deque
         if chat_id not in self._messages:
             return ""
-        
+
         # Get the chat
         chat = self._messages[chat_id]
 
         # Parse the most recent 10 chat messages to a string with each name and message on a new line
-        chat_str = "\n".join(
-            [f"{message.name}: {message.content}" for message in list(chat)[-10:]]
-        )
+        chat_str = "\n".join([f"{message.name}: {message.content}" for message in chat])
+
+        # Return the chat
+        return chat_str
+
+    def get_truncated_chat(self, chat_id: str = DEFAULT_CHAT_ID) -> str:
+        """Get the truncated chat, limited to the last 4,000 characters
+
+        Args:
+            chat_id (str, optional): The ID of the chat to get. Defaults to DEFAULT_CHAT_ID.
+
+        Returns:
+            str: The truncated chat
+        """
+        # If the chat ID is not in the messages, create a new deque
+        if chat_id not in self._messages:
+            return ""
+
+        # Get the chat
+        chat = self._messages[chat_id]
+
+        # Parse the most recent 10 chat messages to a string with each name and message on a new line
+        chat_str = "\n".join([f"{message.name}: {message.content}" for message in chat])
+
+        # Get the last 4,000 characters of the chat
+        chat_str = chat_str[-4000:]
 
         # Return the chat
         return chat_str
