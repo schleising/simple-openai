@@ -5,6 +5,7 @@ The is the synchronous version of the Simple OpenAI API wrapper which uses the [
 If you wish to use the async version, you should use the [AsyncSimple OpenAI API wrapper](async_simple_openai.md) instead.
 """
 
+import json
 from pathlib import Path
 from typing import Callable
 import requests
@@ -169,7 +170,8 @@ class SimpleOpenai:
             ):
                 # Call the function
                 new_prompt = self._tool_manager.call_function(
-                    response_body.choices[0].message.tool_calls[0].function.name
+                    response_body.choices[0].message.tool_calls[0].function.name,
+                    **json.loads(response_body.choices[0].message.tool_calls[0].function.arguments),
                 )
 
                 # Add the response to the chat

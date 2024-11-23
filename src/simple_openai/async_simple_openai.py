@@ -5,6 +5,7 @@ The is the async version of the Simple OpenAI API wrapper which uses the [`aioht
 It is intended for use with asyncio applications.  If you are not using asyncio, you should use the [Simple OpenAI API wrapper](simple_openai.md) instead.
 """
 
+import json
 from pathlib import Path
 from typing import Callable
 
@@ -177,7 +178,8 @@ class AsyncSimpleOpenai:
                     ):
                         # Call the function
                         new_prompt = await self._tool_manager.async_call_function(
-                            response_body.choices[0].message.tool_calls[0].function.name
+                            response_body.choices[0].message.tool_calls[0].function.name,
+                            **json.loads(response_body.choices[0].message.tool_calls[0].function.arguments),
                         )
 
                         # Add the response to the chat
