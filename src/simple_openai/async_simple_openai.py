@@ -392,3 +392,12 @@ class AsyncSimpleOpenai:
 
         # Return the chat history
         return chat_history
+
+    def clear_chat(self, chat_id: str) -> None:
+        """Clear the chat history
+
+        Args:
+            chat_id (str): The ID of the chat
+        """
+        # Clear the chat history
+        self._chat.clear_chat(chat_id)

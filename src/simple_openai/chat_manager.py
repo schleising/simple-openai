@@ -164,3 +164,22 @@ class ChatManager:
 
         # Return the chat
         return chat_str
+
+    def clear_chat(self, chat_id: str = DEFAULT_CHAT_ID) -> None:
+        """Clear the chat
+
+        Args:
+            chat_id (str, optional): The ID of the chat to clear. Defaults to DEFAULT_CHAT_ID.
+        """
+        # If the chat ID is not in the messages, create a new deque
+        if chat_id not in self._messages:
+            return
+
+        # Clear the chat
+        self._messages[chat_id].clear()
+
+        # If a storage path is provided, save the chat history
+        if self._storage_path is not None:
+            # Save the chat history
+            with open(self._storage_path / CHAT_HISTORY_FILE, "wb") as f:
+                pickle.dump(self._messages, f)
