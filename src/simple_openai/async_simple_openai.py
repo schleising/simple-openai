@@ -112,6 +112,70 @@ class AsyncSimpleOpenai:
         """
         self._tool_manager.add_tool(tool_definition, function)
 
+    async def get_function_response(
+        self,
+        chat_id: str,
+        session: aiohttp.ClientSession,
+        function_name: str,
+        add_date_time: bool = False,
+        **kwargs,
+    ) -> open_ai_models.ChatResponse | open_ai_models.ErrorResponse:
+        """Get a function response
+
+        Args:
+            chat_id (str): The ID of the chat
+            session (aiohttp.ClientSession): The aiohttp session
+            function_name (str): The name of the function
+            add_date_time (bool, optional): Whether to add the date and time to the message. Defaults to False.
+
+        Returns:
+            open_ai_models.ChatResponse | open_ai_models.ErrorResponse: The chat response or error response
+        """
+
+        # Call the function
+        new_prompt = await self._tool_manager.async_call_function(
+            function_name=function_name,
+            **kwargs,
+        )
+
+        # Add the message to the chat
+        messages = self._chat.add_message(
+            open_ai_models.ChatMessage(
+                role="function", content=new_prompt, name="Botto"
+            ),
+            chat_id=chat_id,
+            add_date_time=add_date_time,
+        ).messages
+
+        # Create the request body
+        request_body = open_ai_models.ChatRequest(
+            messages=messages,
+            tools=self._tool_manager.get_json_tool_list(),
+            tool_choice="none",
+        )
+
+        # Send the request
+        async with session.post(
+            constants.CHAT_URL, json=request_body.model_dump()
+        ) as response:
+            # Check the status code
+            if response.status == 200:
+                # Get the response content
+                response_text = await response.text()
+
+                # Parse the response body
+                response_body = open_ai_models.ChatResponse.model_validate_json(
+                    response_text
+                )
+            else:
+                # Parse the error response body
+                response_body = open_ai_models.ErrorResponse.model_validate_json(
+                    await response.text()
+                )
+
+            # Return the response
+            return response_body
+
     async def get_chat_response(
         self,
         prompt: str,
@@ -159,29 +223,28 @@ class AsyncSimpleOpenai:
             # Send the request
             async with session.post(
                 constants.CHAT_URL, json=request_body.model_dump()
-            ) as response1:
+            ) as response:
                 # Check the status code
-                if response1.status == 200:
+                if response.status == 200:
                     # Get the response content
-                    response_text = await response1.text()
+                    response_text = await response.text()
 
                     # Parse the response body
                     response_body = open_ai_models.ChatResponse.model_validate_json(
                         response_text
                     )
 
-                    # Check if a function was called
-                    if (
+                    print(f"Finish reason: {response_body.choices[0].finish_reason}")
+
+                    # Check if a function was called, and loop until no more functions are called
+                    while (
                         response_body.choices[0].finish_reason
                         == constants.OPEN_AI_TOOL_CALLS
                         and response_body.choices[0].message.tool_calls is not None
                     ):
-                        # Call the function
-                        new_prompt = await self._tool_manager.async_call_function(
-                            response_body.choices[0].message.tool_calls[0].function.name,
-                            **json.loads(response_body.choices[0].message.tool_calls[0].function.arguments),
+                        print(
+                            f"Calling {response_body.choices[0].message.tool_calls[0].function.name}"
                         )
-
                         # Add the response to the chat
                         self._chat.add_message(
                             open_ai_models.ChatMessage(
@@ -195,93 +258,56 @@ class AsyncSimpleOpenai:
                             add_date_time=add_date_time,
                         )
 
-                        # Add the message to the chat
-                        messages = self._chat.add_message(
-                            open_ai_models.ChatMessage(
-                                role="function", content=new_prompt, name="Botto"
-                            ),
+                        # Call the function
+                        response_body = await self.get_function_response(
                             chat_id=chat_id,
+                            session=session,
+                            function_name=response_body.choices[0]
+                            .message.tool_calls[0]
+                            .function.name,
                             add_date_time=add_date_time,
-                        ).messages
-
-                        # Create the request body
-                        request_body = open_ai_models.ChatRequest(
-                            messages=messages,
-                            tools=self._tool_manager.get_json_tool_list(),
-                            tool_choice="none",
+                            **json.loads(
+                                response_body.choices[0]
+                                .message.tool_calls[0]
+                                .function.arguments
+                            ),
                         )
 
-                        # Send the request
-                        async with session.post(
-                            constants.CHAT_URL, json=request_body.model_dump()
-                        ) as response2:
-                            # Check the status code
-                            if response2.status == 200:
-                                # Get the response content
-                                response_text = await response2.text()
-
-                                # Parse the response body
-                                response_body = (
-                                    open_ai_models.ChatResponse.model_validate_json(
-                                        response_text
-                                    )
-                                )
-
-                                # Create the response
-                                if response_body.choices[0].message.content is not None:
-                                    open_ai_response = SimpleOpenaiResponse(
-                                        True, response_body.choices[0].message.content
-                                    )
-                                else:
-                                    open_ai_response = SimpleOpenaiResponse(
-                                        True, "No response"
-                                    )
-
-                                # Add the response to the chat
-                                self._chat.add_message(
-                                    open_ai_models.ChatMessage(
-                                        role="assistant",
-                                        content=open_ai_response.message,
-                                        name="Botto",
-                                    ),
-                                    chat_id=chat_id,
-                                    add_date_time=add_date_time,
-                                )
-                            else:
-                                # Parse the error response body
-                                response_body = (
-                                    open_ai_models.ErrorResponse.model_validate_json(
-                                        await response2.text()
-                                    )
-                                )
-
-                                # Create the response
-                                open_ai_response = SimpleOpenaiResponse(
-                                    False, response_body.error.message
-                                )
-                    else:
-                        # Create the response
-                        if response_body.choices[0].message.content is not None:
-                            open_ai_response = SimpleOpenaiResponse(
-                                True, response_body.choices[0].message.content
+                        # Check if the response is an error
+                        if isinstance(response_body, open_ai_models.ErrorResponse):
+                            # Return the error response
+                            return SimpleOpenaiResponse(
+                                False, response_body.error.message
                             )
-                        else:
-                            open_ai_response = SimpleOpenaiResponse(True, "No response")
 
-                        # Add the response to the chat
-                        self._chat.add_message(
-                            open_ai_models.ChatMessage(
-                                role="assistant",
-                                content=open_ai_response.message,
-                                name="Botto",
-                            ),
-                            chat_id=chat_id,
-                            add_date_time=add_date_time,
+                        print(
+                            f"Finish reason: {response_body.choices[0].finish_reason}"
                         )
+
+                    # Create the response
+                    if response_body.choices[0].message.content is not None:
+                        open_ai_response = SimpleOpenaiResponse(
+                            True, response_body.choices[0].message.content
+                        )
+
+                    else:
+                        open_ai_response = SimpleOpenaiResponse(True, "No response")
+
+                    # Add the response to the chat
+                    self._chat.add_message(
+                        open_ai_models.ChatMessage(
+                            role="assistant",
+                            content=open_ai_response.message,
+                            name="Botto",
+                        ),
+                        chat_id=chat_id,
+                        add_date_time=add_date_time,
+                    )
+
                 else:
                     # Parse the error response body
                     response_body = open_ai_models.ErrorResponse.model_validate_json(
-                        await response1.text()
+                        await response.text()
                     )
 
                     # Create the response
