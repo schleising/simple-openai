@@ -236,6 +236,10 @@ class AsyncSimpleOpenai:
 
                     print(f"Finish reason 1: {response_body.choices[0].finish_reason}")
 
+                    print()
+                    print(response_body.model_dump_json(indent=2))
+                    print()
+
                     # Check if a function was called, and loop until no more functions are called
                     while (
                         response_body.choices[0].finish_reason
@@ -283,6 +287,11 @@ class AsyncSimpleOpenai:
                         print(
                             f"Finish reason 2: {response_body.choices[0].finish_reason}"
                         )
+
+                        print()
+                        print(response_body.model_dump_json(indent=2))
+                        print()
+
 
                     # Create the response
                     if response_body.choices[0].message.content is not None:
