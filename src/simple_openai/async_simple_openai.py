@@ -277,6 +277,9 @@ class AsyncSimpleOpenai:
                             add_date_time=add_date_time,
                         )
 
+                        # Increment the tool call counter
+                        tool_call_counter += 1
+
                         # Call the function
                         response_body = await self.get_function_response(
                             chat_id=chat_id,
@@ -292,9 +295,6 @@ class AsyncSimpleOpenai:
                                 .function.arguments
                             ),
                         )
-
-                        # Increment the tool call counter
-                        tool_call_counter += 1
 
                         # Check if the response is an error
                         if isinstance(response_body, open_ai_models.ErrorResponse):
