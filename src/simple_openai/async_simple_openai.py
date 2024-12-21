@@ -151,7 +151,7 @@ class AsyncSimpleOpenai:
         request_body = open_ai_models.ChatRequest(
             messages=messages,
             tools=self._tool_manager.get_json_tool_list(),
-            tool_choice="none",
+            tool_choice="auto",
         )
 
         # Send the request
