@@ -155,8 +155,6 @@ class AsyncSimpleOpenai:
         else:
             tool_choice = "none"
 
-        print(f"\nTool choice: {tool_choice}\n")
-
         # Create the request body
         request_body = open_ai_models.ChatRequest(
             messages=messages,
@@ -246,12 +244,6 @@ class AsyncSimpleOpenai:
                         response_text
                     )
 
-                    print(f"Finish reason 1: {response_body.choices[0].finish_reason}")
-
-                    print()
-                    print(response_body.model_dump_json(indent=2))
-                    print()
-
                     # Set the Tool Call counter to 0
                     tool_call_counter = 0
 
@@ -302,15 +294,6 @@ class AsyncSimpleOpenai:
                             return SimpleOpenaiResponse(
                                 False, response_body.error.message
                             )
-
-                        print(
-                            f"Finish reason 2: {response_body.choices[0].finish_reason}"
-                        )
-
-                        print()
-                        print(response_body.model_dump_json(indent=2))
-                        print()
-
 
                     # Create the response
                     if response_body.choices[0].message.content is not None:
