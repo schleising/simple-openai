@@ -234,7 +234,7 @@ class AsyncSimpleOpenai:
                         response_text
                     )
 
-                    print(f"Finish reason: {response_body.choices[0].finish_reason}")
+                    print(f"Finish reason 1: {response_body.choices[0].finish_reason}")
 
                     # Check if a function was called, and loop until no more functions are called
                     while (
@@ -281,7 +281,7 @@ class AsyncSimpleOpenai:
                             )
 
                         print(
-                            f"Finish reason: {response_body.choices[0].finish_reason}"
+                            f"Finish reason 2: {response_body.choices[0].finish_reason}"
                         )
 
                     # Create the response
