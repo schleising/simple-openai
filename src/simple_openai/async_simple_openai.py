@@ -117,6 +117,7 @@ class AsyncSimpleOpenai:
         chat_id: str,
         session: aiohttp.ClientSession,
         function_name: str,
+        allow_tool_calls: bool = True,
         add_date_time: bool = False,
         **kwargs,
     ) -> open_ai_models.ChatResponse | open_ai_models.ErrorResponse:
@@ -147,11 +148,17 @@ class AsyncSimpleOpenai:
             add_date_time=add_date_time,
         ).messages
 
+        # Set the tool choice to auto if tool calls are allowed
+        if allow_tool_calls:
+            tool_choice = "auto"
+        else:
+            tool_choice = "none"
+
         # Create the request body
         request_body = open_ai_models.ChatRequest(
             messages=messages,
             tools=self._tool_manager.get_json_tool_list(),
-            tool_choice="auto",
+            tool_choice=tool_choice,
         )
 
         # Send the request
@@ -181,6 +188,7 @@ class AsyncSimpleOpenai:
         prompt: str,
         name: str,
         chat_id: str = constants.DEFAULT_CHAT_ID,
+        max_tool_calls: int = 1,
         add_date_time: bool = False,
     ) -> SimpleOpenaiResponse:
         """Get a chat response from OpenAI
@@ -191,6 +199,7 @@ class AsyncSimpleOpenai:
             prompt (str): The prompt to use for the chat response
             name (str): The name of the user
             chat_id (str, optional): The ID of the chat to continue. Defaults to DEFAULT_CHAT_ID.
+            max_tool_calls (int, optional): The maximum number of tool calls. Defaults to 1.
             add_date_time (bool, optional): Whether to add the date and time to the message. Defaults to False.
 
         Returns:
@@ -240,6 +249,9 @@ class AsyncSimpleOpenai:
                     print(response_body.model_dump_json(indent=2))
                     print()
 
+                    # Set the Tool Call counter to 0
+                    tool_call_counter = 0
+
                     # Check if a function was called, and loop until no more functions are called
                     while (
                         response_body.choices[0].finish_reason
@@ -269,6 +281,7 @@ class AsyncSimpleOpenai:
                             function_name=response_body.choices[0]
                             .message.tool_calls[0]
                             .function.name,
+                            allow_tool_calls=tool_call_counter < max_tool_calls,
                             add_date_time=add_date_time,
                             **json.loads(
                                 response_body.choices[0]
@@ -276,6 +289,9 @@ class AsyncSimpleOpenai:
                                 .function.arguments
                             ),
                         )
+
+                        # Increment the tool call counter
+                        tool_call_counter += 1
 
                         # Check if the response is an error
                         if isinstance(response_body, open_ai_models.ErrorResponse):
