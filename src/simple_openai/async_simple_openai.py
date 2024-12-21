@@ -127,6 +127,7 @@ class AsyncSimpleOpenai:
             chat_id (str): The ID of the chat
             session (aiohttp.ClientSession): The aiohttp session
             function_name (str): The name of the function
+            allow_tool_calls (bool, optional): Whether to allow tool calls. Defaults to True
             add_date_time (bool, optional): Whether to add the date and time to the message. Defaults to False.
 
         Returns:
@@ -153,6 +154,8 @@ class AsyncSimpleOpenai:
             tool_choice = "auto"
         else:
             tool_choice = "none"
+
+        print(f"\nTool choice: {tool_choice}\n")
 
         # Create the request body
         request_body = open_ai_models.ChatRequest(
