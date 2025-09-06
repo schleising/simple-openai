@@ -85,7 +85,7 @@ class Chat(BaseModel):
 class ChatRequest(Chat):
     tools: list[OpenAITool] | None = None
     tool_choice: str
-    model: str = "gpt-4o"
+    model: str = "gpt-5"
 
 
 class ResponseMessage(BaseModel):
