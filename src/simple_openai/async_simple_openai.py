@@ -116,6 +116,7 @@ class AsyncSimpleOpenai:
         self,
         chat_id: str,
         session: aiohttp.ClientSession,
+        tool_call_id: str,
         function_name: str,
         allow_tool_calls: bool = True,
         add_date_time: bool = False,
@@ -143,7 +144,7 @@ class AsyncSimpleOpenai:
         # Add the message to the chat
         messages = self._chat.add_message(
             open_ai_models.ChatMessage(
-                role="function", content=new_prompt, name="Botto"
+                role="tool", tool_call_id=tool_call_id, content=new_prompt, name="Botto"
             ),
             chat_id=chat_id,
             add_date_time=add_date_time,
@@ -164,7 +165,7 @@ class AsyncSimpleOpenai:
 
         # Send the request
         async with session.post(
-            constants.CHAT_URL, json=request_body.model_dump()
+            constants.CHAT_URL, json=request_body.model_dump(exclude_none=True)
         ) as response:
             # Check the status code
             if response.status == 200:
@@ -223,7 +224,6 @@ class AsyncSimpleOpenai:
 
         # Delete the tools from the request body if there are no tools
         if request_body.tools is None:
-            del request_body.tools
             del request_body.tool_choice
 
         # Open a session
@@ -232,7 +232,7 @@ class AsyncSimpleOpenai:
         ) as session:
             # Send the request
             async with session.post(
-                constants.CHAT_URL, json=request_body.model_dump()
+                constants.CHAT_URL, json=request_body.model_dump(exclude_none=True)
             ) as response:
                 # Check the status code
                 if response.status == 200:
@@ -260,9 +260,7 @@ class AsyncSimpleOpenai:
                         self._chat.add_message(
                             open_ai_models.ChatMessage(
                                 role="assistant",
-                                content=response_body.choices[0]
-                                .message.tool_calls[0]
-                                .function.model_dump_json(),
+                                tool_calls=response_body.choices[0].message.tool_calls,
                                 name="Botto",
                             ),
                             chat_id=chat_id,
@@ -276,6 +274,9 @@ class AsyncSimpleOpenai:
                         response_body = await self.get_function_response(
                             chat_id=chat_id,
                             session=session,
+                            tool_call_id=response_body.choices[0]
+                            .message.tool_calls[0]
+                            .id,
                             function_name=response_body.choices[0]
                             .message.tool_calls[0]
                             .function.name,
@@ -351,7 +352,7 @@ class AsyncSimpleOpenai:
         ) as session:
             # Send the request
             async with session.post(
-                constants.IMAGE_URL, json=request_body.model_dump()
+                constants.IMAGE_URL, json=request_body.model_dump(exclude_none=True)
             ) as response:
                 # Check the status code
                 if response.status == 200:

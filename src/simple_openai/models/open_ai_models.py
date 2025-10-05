@@ -1,4 +1,4 @@
-""" OpenAI API models
+"""OpenAI API models
 
 This module contains the models for the OpenAI API.
 
@@ -7,7 +7,10 @@ The models are used to validate the data sent to and received from the OpenAI AP
 The models are based on the [OpenAI API documentation](https://beta.openai.com/docs/api-reference/introduction) and use [Pydantic](https://pydantic-docs.helpmanual.io/) to help serialise and deserialise the JSON.
 """
 
-from pydantic import BaseModel
+from collections import deque
+from pydantic import BaseModel, field_validator
+
+from simple_openai.constants import MAX_CHAT_HISTORY
 
 
 class OpenAIParameter(BaseModel):
@@ -74,12 +77,24 @@ class ToolCall(BaseModel):
 
 class ChatMessage(BaseModel):
     role: str
-    content: str
+    tool_calls: list[ToolCall] | None = None
+    tool_call_id: str | None = None
+    content: str | None = None
     name: str = "Botto"
 
 
 class Chat(BaseModel):
     messages: list[ChatMessage]
+
+
+class ChatHistory(BaseModel):
+    messages: dict[str, deque[ChatMessage]]
+
+    # Ensure maxlen is always enforced
+    @field_validator("messages", mode="after")
+    def enforce_maxlen(cls, v: dict[str, deque[ChatMessage]]) -> dict[str, deque[ChatMessage]]:
+        # Always reconstruct with maxlen=MAX_CHAT_HISTORY
+        return {k: deque(v, maxlen=MAX_CHAT_HISTORY) for k, v in v.items()}
 
 
 class ChatRequest(Chat):

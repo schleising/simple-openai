@@ -8,7 +8,6 @@ The chat manager is used to manage the chat messages and create the chat, it lim
 from collections import deque
 from datetime import datetime
 from pathlib import Path
-import pickle
 from zoneinfo import ZoneInfo
 
 from .models import open_ai_models
@@ -52,15 +51,13 @@ class ChatManager:
                 # Load the chat history
                 with open(self._storage_path / CHAT_HISTORY_FILE, "rb") as f:
                     # Load the chat history
-                    self._messages: dict[str, deque[open_ai_models.ChatMessage]] = (
-                        pickle.load(f)
-                    )
+                    self._chat_history = open_ai_models.ChatHistory.model_validate_json(f.read())
             except FileNotFoundError:
                 # initialise a deque of messages not including the system message
-                self._messages: dict[str, deque[open_ai_models.ChatMessage]] = {}
+                self._chat_history = open_ai_models.ChatHistory(messages={})
         else:
             # initialise a deque of messages not including the system message
-            self._messages: dict[str, deque[open_ai_models.ChatMessage]] = {}
+            self._chat_history = open_ai_models.ChatHistory(messages={})
 
     def update_system_message(self, system_message: str) -> None:
         """Update the system message
@@ -86,18 +83,18 @@ class ChatManager:
         Returns:
             open_ai_models.Chat: The chat
         """
-        # If the chat ID is not in the messages, create a new deque
-        if chat_id not in self._messages:
-            self._messages[chat_id] = deque(maxlen=self._max_messages)
+        # If the chat ID is not in the chat history, create a new deque
+        if chat_id not in self._chat_history.messages:
+            self._chat_history.messages[chat_id] = deque(maxlen=self._max_messages)
 
         # Add the message to the deque
-        self._messages[chat_id].append(message)
+        self._chat_history.messages[chat_id].append(message)
 
         # If a storage path is provided, save the chat history
         if self._storage_path is not None:
             # Save the chat history
-            with open(self._storage_path / CHAT_HISTORY_FILE, "wb") as f:
-                pickle.dump(self._messages, f)
+            with open(self._storage_path / CHAT_HISTORY_FILE, "w") as f:
+                f.write(self._chat_history.model_dump_json(exclude_none=True, indent=2))
 
         # Update the system message with the date and time in iso format if required
         if add_date_time:
@@ -112,7 +109,7 @@ class ChatManager:
                     role="system", content=system_message, name="System"
                 )
             ]
-            + list(self._messages[chat_id])
+            + list(self._chat_history.messages[chat_id])
         )
 
         # Return the chat
@@ -128,11 +125,11 @@ class ChatManager:
             str: The chat
         """
         # If the chat ID is not in the messages, create a new deque
-        if chat_id not in self._messages:
+        if chat_id not in self._chat_history.messages:
             return ""
 
         # Get the chat
-        chat = self._messages[chat_id]
+        chat = self._chat_history.messages[chat_id]
 
         # Parse the most recent 10 chat messages to a string with each name and message on a new line
         chat_str = "\n".join([f"{message.name}: {message.content}" for message in chat])
@@ -150,11 +147,11 @@ class ChatManager:
             str: The truncated chat
         """
         # If the chat ID is not in the messages, create a new deque
-        if chat_id not in self._messages:
+        if chat_id not in self._chat_history.messages:
             return ""
 
         # Get the chat
-        chat = self._messages[chat_id]
+        chat = self._chat_history.messages[chat_id]
 
         # Parse the most recent 10 chat messages to a string with each name and message on a new line
         chat_str = "\n".join([f"{message.name}: {message.content}" for message in chat])
@@ -172,14 +169,14 @@ class ChatManager:
             chat_id (str, optional): The ID of the chat to clear. Defaults to DEFAULT_CHAT_ID.
         """
         # If the chat ID is not in the messages, create a new deque
-        if chat_id not in self._messages:
+        if chat_id not in self._chat_history.messages:
             return
 
         # Clear the chat
-        self._messages[chat_id].clear()
+        self._chat_history.messages[chat_id].clear()
 
         # If a storage path is provided, save the chat history
         if self._storage_path is not None:
             # Save the chat history
-            with open(self._storage_path / CHAT_HISTORY_FILE, "wb") as f:
-                pickle.dump(self._messages, f)
+            with open(self._storage_path / CHAT_HISTORY_FILE, "w") as f:
+                f.write(self._chat_history.model_dump_json(exclude_none=True, indent=2))

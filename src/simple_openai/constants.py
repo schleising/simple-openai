@@ -9,7 +9,7 @@ FULL_CHAT_URL = BASE_URL + CHAT_URL
 FULL_IMAGE_URL = BASE_URL + IMAGE_URL
 
 MAX_CHAT_HISTORY = 21
-CHAT_HISTORY_FILE = Path("chat_history.pickle")
+CHAT_HISTORY_FILE = Path("chat_history.json")
 DEFAULT_CHAT_ID = "default"
 
 OPEN_AI_TOOL_CALLS = "tool_calls"

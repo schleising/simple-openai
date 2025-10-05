@@ -112,6 +112,7 @@ class SimpleOpenai:
     def get_function_response(
         self,
         chat_id: str,
+        tool_call_id: str,
         function_name: str,
         allow_tool_calls: bool = True,
         add_date_time: bool = False,
@@ -138,7 +139,10 @@ class SimpleOpenai:
         # Add the message to the chat
         messages = self._chat.add_message(
             open_ai_models.ChatMessage(
-                role="function", content=new_prompt, name="Botto"
+                role="tool",
+                tool_call_id=tool_call_id,
+                content=new_prompt,
+                name="Botto",
             ),
             chat_id=chat_id,
             add_date_time=add_date_time,
@@ -158,7 +162,7 @@ class SimpleOpenai:
         )
 
         # Send the request
-        response = requests.post(constants.CHAT_URL, json=request_body.model_dump())
+        response = requests.post(constants.CHAT_URL, json=request_body.model_dump(exclude_none=True))
 
         # Check the status code
         if response.status_code == requests.codes.OK:
@@ -217,11 +221,10 @@ class SimpleOpenai:
 
         # Delete the tools from the request body if there are no tools
         if request_body.tools is None:
-            del request_body.tools
             del request_body.tool_choice
 
         # Send the request
-        response = requests.post(constants.CHAT_URL, json=request_body.model_dump())
+        response = requests.post(constants.CHAT_URL, json=request_body.model_dump(exclude_none=True))
 
         # Check the status code
         if response.status_code == requests.codes.OK:
@@ -248,9 +251,7 @@ class SimpleOpenai:
                 self._chat.add_message(
                     open_ai_models.ChatMessage(
                         role="assistant",
-                        content=response_body.choices[0]
-                        .message.tool_calls[0]
-                        .function.model_dump_json(),
+                        tool_calls=response_body.choices[0].message.tool_calls,
                         name="Botto",
                     ),
                     chat_id=chat_id,
@@ -263,6 +264,7 @@ class SimpleOpenai:
                 # Call the function
                 response_body = self.get_function_response(
                     chat_id=chat_id,
+                    tool_call_id=response_body.choices[0].message.tool_calls[0].id,
                     function_name=response_body.choices[0]
                     .message.tool_calls[0]
                     .function.name,
@@ -329,7 +331,7 @@ class SimpleOpenai:
         # Send the request
         response = requests.post(
             constants.FULL_IMAGE_URL,
-            json=request_body.model_dump(),
+            json=request_body.model_dump(exclude_none=True),
             headers=self._headers,
         )
 
