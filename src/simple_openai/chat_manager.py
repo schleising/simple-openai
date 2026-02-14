@@ -90,6 +90,12 @@ class ChatManager:
         # Add the message to the deque
         self._chat_history.messages[chat_id].append(message)
 
+        # If appending this message causes the oldest message to be a response to a tool call,
+        # remove the tool call message as well to avoid orphaned tool calls in the chat history.
+        # This is done by checking if the oldest message in the deque has the role "tool", and if so, popping it from the left of the deque.
+        if (self._chat_history.messages[chat_id] and self._chat_history.messages[chat_id][0].role == "tool"):
+            self._chat_history.messages[chat_id].popleft()
+
         # If a storage path is provided, save the chat history
         if self._storage_path is not None:
             # Save the chat history
