@@ -101,6 +101,7 @@ class ChatRequest(Chat):
     tools: list[OpenAITool] | None = None
     tool_choice: str
     model: str = "gpt-5.2"
+    parallel_tool_calls: bool = False
 
 
 class ResponseMessage(BaseModel):
