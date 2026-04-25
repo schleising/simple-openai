@@ -100,7 +100,7 @@ class ChatHistory(BaseModel):
 class ChatRequest(Chat):
     tools: list[OpenAITool] | None = None
     tool_choice: str
-    model: str = "gpt-5.2"
+    model: str = "gpt-5.5"
     parallel_tool_calls: bool = False
 
 

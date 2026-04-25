@@ -161,6 +161,11 @@ class SimpleOpenai:
             tool_choice=tool_choice,
         )
 
+        # Delete the tools from the request body if there are no tools
+        if request_body.tools is None:
+            del request_body.tool_choice
+            del request_body.parallel_tool_calls
+
         # Send the request
         response = requests.post(constants.CHAT_URL, json=request_body.model_dump(exclude_none=True))
 
@@ -222,6 +227,7 @@ class SimpleOpenai:
         # Delete the tools from the request body if there are no tools
         if request_body.tools is None:
             del request_body.tool_choice
+            del request_body.parallel_tool_calls
 
         # Send the request
         response = requests.post(constants.CHAT_URL, json=request_body.model_dump(exclude_none=True))

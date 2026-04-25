@@ -163,6 +163,11 @@ class AsyncSimpleOpenai:
             tool_choice=tool_choice,
         )
 
+        # Delete the tools from the request body if there are no tools
+        if request_body.tools is None:
+            del request_body.tool_choice
+            del request_body.parallel_tool_calls
+
         # Send the request
         async with session.post(
             constants.CHAT_URL, json=request_body.model_dump(exclude_none=True)
@@ -225,6 +230,7 @@ class AsyncSimpleOpenai:
         # Delete the tools from the request body if there are no tools
         if request_body.tools is None:
             del request_body.tool_choice
+            del request_body.parallel_tool_calls
 
         # Open a session
         async with aiohttp.ClientSession(
