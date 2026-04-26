@@ -7,8 +7,12 @@ The models are used to validate the data sent to and received from the OpenAI AP
 The models are based on the [OpenAI API documentation](https://beta.openai.com/docs/api-reference/introduction) and use [Pydantic](https://pydantic-docs.helpmanual.io/) to help serialise and deserialise the JSON.
 """
 
+from __future__ import annotations
+
 from collections import deque
-from pydantic import BaseModel, field_validator
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict, field_validator
 
 from simple_openai.constants import MAX_CHAT_HISTORY
 
@@ -19,12 +23,32 @@ class OpenAIParameter(BaseModel):
     This class represents an OpenAI parameter.
 
     Attributes:
-        type (str): The type of the parameter
-        description (str): The description of the parameter, used by OpenAI to decide whether to use the parameter
+        type (str | None): The JSON schema type of the parameter
+        description (str | None): The description used by OpenAI when choosing tools
+        properties (dict[str, OpenAIParameter] | None): Nested object properties
+        required (list[str] | None): Required nested properties
+        items (OpenAIParameter | None): Array item schema
+        enum (list[Any] | None): Enum values for constrained fields
+        default (Any | None): Default value for the parameter
+        pattern (str | None): Regex pattern for string values
+        minimum (int | float | None): Minimum numeric value
+        maximum (int | float | None): Maximum numeric value
+        additionalProperties (bool | OpenAIParameter | None): Whether extra properties are allowed
     """
 
-    type: str
-    description: str
+    model_config = ConfigDict(extra="allow")
+
+    type: str | None = None
+    description: str | None = None
+    properties: dict[str, OpenAIParameter] | None = None
+    required: list[str] | None = None
+    items: OpenAIParameter | None = None
+    enum: list[Any] | None = None
+    default: Any | None = None
+    pattern: str | None = None
+    minimum: int | float | None = None
+    maximum: int | float | None = None
+    additionalProperties: bool | OpenAIParameter | None = None
 
 
 class OpenAIParameters(BaseModel):
@@ -36,11 +60,15 @@ class OpenAIParameters(BaseModel):
         type (str): The type of the parameters
         properties (dict[str, OpenAIParameter]): The parameters
         required (list[str], optional): The required parameters. Defaults to [].
+        additionalProperties (bool | OpenAIParameter | None): Whether extra properties are allowed
     """
+
+    model_config = ConfigDict(extra="allow")
 
     type: str = "object"
     properties: dict[str, OpenAIParameter]
     required: list[str] = []
+    additionalProperties: bool | OpenAIParameter | None = None
 
 
 class OpenAIFunction(BaseModel):
@@ -62,6 +90,9 @@ class OpenAIFunction(BaseModel):
 class OpenAITool(BaseModel):
     type: str = "function"
     function: OpenAIFunction
+
+
+OpenAIParameter.model_rebuild()
 
 
 class FunctionCall(BaseModel):
