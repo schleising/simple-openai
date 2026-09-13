@@ -5,7 +5,6 @@ The is the async version of the Simple OpenAI API wrapper which uses the [`aioht
 It is intended for use with asyncio applications.  If you are not using asyncio, you should use the [Simple OpenAI API wrapper](simple_openai.md) instead.
 """
 
-import json
 from pathlib import Path
 from typing import Callable
 
@@ -120,6 +119,7 @@ class AsyncSimpleOpenai:
         function_name: str,
         allow_tool_calls: bool = True,
         add_date_time: bool = False,
+        function_arguments: str | None = None,
         **kwargs,
     ) -> open_ai_models.ChatResponse | open_ai_models.ErrorResponse:
         """Get a function response
@@ -130,16 +130,24 @@ class AsyncSimpleOpenai:
             function_name (str): The name of the function
             allow_tool_calls (bool, optional): Whether to allow tool calls. Defaults to True
             add_date_time (bool, optional): Whether to add the date and time to the message. Defaults to False.
+            function_arguments (str, optional): The JSON arguments string from OpenAI.
 
         Returns:
             open_ai_models.ChatResponse | open_ai_models.ErrorResponse: The chat response or error response
         """
 
-        # Call the function
-        new_prompt = await self._tool_manager.async_call_function(
-            function_name=function_name,
-            **kwargs,
-        )
+        # Call the function. Failures are recorded as a tool result so the chat
+        # history stays valid for later turns.
+        if function_arguments is not None:
+            new_prompt = await self._tool_manager.async_call_function_from_arguments(
+                function_name=function_name,
+                arguments=function_arguments,
+            )
+        else:
+            new_prompt = await self._tool_manager.async_call_function(
+                function_name=function_name,
+                **kwargs,
+            )
 
         # Add the message to the chat
         messages = self._chat.add_message(
@@ -259,14 +267,13 @@ class AsyncSimpleOpenai:
                         == constants.OPEN_AI_TOOL_CALLS
                         and response_body.choices[0].message.tool_calls is not None
                     ):
-                        print(
-                            f"Calling {response_body.choices[0].message.tool_calls[0].function.name}"
-                        )
+                        tool_calls = response_body.choices[0].message.tool_calls
+                        print(f"Calling {tool_calls[0].function.name}")
                         # Add the response to the chat
                         self._chat.add_message(
                             open_ai_models.ChatMessage(
                                 role="assistant",
-                                tool_calls=response_body.choices[0].message.tool_calls,
+                                tool_calls=tool_calls,
                                 name="Botto",
                             ),
                             chat_id=chat_id,
@@ -276,23 +283,38 @@ class AsyncSimpleOpenai:
                         # Increment the tool call counter
                         tool_call_counter += 1
 
+                        # Record a result for every tool_call before requesting the
+                        # next completion. OpenAI rejects history that leaves any
+                        # tool_call_id unanswered.
+                        for extra_call in tool_calls[:-1]:
+                            extra_result = (
+                                await self._tool_manager.async_call_function_from_arguments(
+                                    extra_call.function.name,
+                                    extra_call.function.arguments,
+                                )
+                            )
+                            self._chat.add_message(
+                                open_ai_models.ChatMessage(
+                                    role="tool",
+                                    tool_call_id=extra_call.id,
+                                    content=extra_result,
+                                    name="Botto",
+                                ),
+                                chat_id=chat_id,
+                                add_date_time=add_date_time,
+                            )
+
+                        last_tool_call = tool_calls[-1]
+
                         # Call the function
                         response_body = await self.get_function_response(
                             chat_id=chat_id,
                             session=session,
-                            tool_call_id=response_body.choices[0]
-                            .message.tool_calls[0]
-                            .id,
-                            function_name=response_body.choices[0]
-                            .message.tool_calls[0]
-                            .function.name,
+                            tool_call_id=last_tool_call.id,
+                            function_name=last_tool_call.function.name,
                             allow_tool_calls=tool_call_counter < max_tool_calls,
                             add_date_time=add_date_time,
-                            **json.loads(
-                                response_body.choices[0]
-                                .message.tool_calls[0]
-                                .function.arguments
-                            ),
+                            function_arguments=last_tool_call.function.arguments,
                         )
 
                         # Check if the response is an error

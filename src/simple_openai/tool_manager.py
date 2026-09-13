@@ -11,6 +11,7 @@ The tool can optionally take keyword arguments, the keyword arguments should be 
 Call the tool using the call_function method for synchronous functions or the async_call_function method for asynchronous.
 """
 
+import json
 from typing import Any, Callable
 from dataclasses import dataclass
 
@@ -71,7 +72,24 @@ class ToolManager:
             # Return None
             return None
 
-    def call_function(self, function_name: str, **kwargs: dict[str, Any]) -> str:
+    def _parse_arguments(self, arguments: str) -> dict[str, Any]:
+        """Parse a tool-call arguments JSON object
+
+        Args:
+            arguments (str): The JSON arguments string from OpenAI
+
+        Returns:
+            dict[str, Any]: The parsed arguments
+
+        Raises:
+            ValueError: If the arguments are not a JSON object
+        """
+        parsed = json.loads(arguments)
+        if not isinstance(parsed, dict):
+            raise ValueError("Tool arguments must be a JSON object")
+        return parsed
+
+    def call_function(self, function_name: str, **kwargs: Any) -> str:
         """Call a function
 
         Args:
@@ -85,13 +103,35 @@ class ToolManager:
         if function_name not in self._tools:
             # Return text to tell the bot it hallucinated the function
             return f"Tool {function_name} does not exist, please answer the last question again."
-        else:
-            # Call the function
-            return self._tools[function_name].function(**kwargs)
 
-    async def async_call_function(
-        self, function_name: str, **kwargs: dict[str, Any]
+        try:
+            return self._tools[function_name].function(**kwargs)
+        except Exception as exc:
+            return f"Tool {function_name} failed: {exc}"
+
+    def call_function_from_arguments(
+        self, function_name: str, arguments: str
     ) -> str:
+        """Call a function from an OpenAI tool-call arguments string
+
+        Invalid JSON and function errors are returned as a string so a tool
+        result can still be written to the chat history.
+
+        Args:
+            function_name (str): The name of the function to call
+            arguments (str): The JSON arguments string from OpenAI
+
+        Returns:
+            str: The result of the function
+        """
+        try:
+            parsed_arguments = self._parse_arguments(arguments)
+        except Exception as exc:
+            return f"Tool {function_name} failed: {exc}"
+
+        return self.call_function(function_name, **parsed_arguments)
+
+    async def async_call_function(self, function_name: str, **kwargs: Any) -> str:
         """Call a function
 
         Args:
@@ -105,6 +145,30 @@ class ToolManager:
         if function_name not in self._tools:
             # Return text to tell the bot it hallucinated the function
             return f"Function {function_name} does not exist, please answer the last question again."
-        else:
-            # Call the function
+
+        try:
             return await self._tools[function_name].function(**kwargs)
+        except Exception as exc:
+            return f"Tool {function_name} failed: {exc}"
+
+    async def async_call_function_from_arguments(
+        self, function_name: str, arguments: str
+    ) -> str:
+        """Call a function from an OpenAI tool-call arguments string
+
+        Invalid JSON and function errors are returned as a string so a tool
+        result can still be written to the chat history.
+
+        Args:
+            function_name (str): The name of the function to call
+            arguments (str): The JSON arguments string from OpenAI
+
+        Returns:
+            str: The result of the function
+        """
+        try:
+            parsed_arguments = self._parse_arguments(arguments)
+        except Exception as exc:
+            return f"Tool {function_name} failed: {exc}"
+
+        return await self.async_call_function(function_name, **parsed_arguments)
