@@ -4,7 +4,7 @@ This module contains the models for the OpenAI API.
 
 The models are used to validate the data sent to and received from the OpenAI API.
 
-The models are based on the [OpenAI API documentation](https://beta.openai.com/docs/api-reference/introduction) and use [Pydantic](https://pydantic-docs.helpmanual.io/) to help serialise and deserialise the JSON.
+The models are based on the [OpenAI API documentation](https://platform.openai.com/docs/api-reference/responses) and use [Pydantic](https://docs.pydantic.dev/) to help serialise and deserialise the JSON.
 """
 
 from __future__ import annotations
@@ -12,9 +12,15 @@ from __future__ import annotations
 from collections import deque
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from simple_openai.constants import MAX_CHAT_HISTORY
+from simple_openai.constants import (
+    FUNCTION_CALL_OUTPUT_TYPE,
+    FUNCTION_CALL_TYPE,
+    MAX_CHAT_HISTORY,
+    MESSAGE_TYPE,
+    REASONING_INCLUDE,
+)
 
 
 class OpenAIParameter(BaseModel):
@@ -88,6 +94,12 @@ class OpenAIFunction(BaseModel):
 
 
 class OpenAITool(BaseModel):
+    """Tool definition used by `add_tool`
+
+    This is the Chat Completions-shaped public schema. It is converted to a
+    Responses function tool when a request is sent.
+    """
+
     type: str = "function"
     function: OpenAIFunction
 
@@ -95,18 +107,44 @@ class OpenAITool(BaseModel):
 OpenAIParameter.model_rebuild()
 
 
+class ResponsesFunctionTool(BaseModel):
+    """Function tool in the internally tagged Responses format"""
+
+    type: str = "function"
+    name: str
+    description: str
+    parameters: OpenAIParameters
+    strict: bool = False
+
+    @classmethod
+    def from_openai_tool(cls, tool: OpenAITool) -> ResponsesFunctionTool:
+        """Convert a public `OpenAITool` to a Responses function tool"""
+        return cls(
+            name=tool.function.name,
+            description=tool.function.description,
+            parameters=tool.function.parameters,
+            strict=False,
+        )
+
+
 class FunctionCall(BaseModel):
+    """Legacy Chat Completions function call"""
+
     name: str
     arguments: str
 
 
 class ToolCall(BaseModel):
+    """Legacy Chat Completions tool call"""
+
     id: str
     type: str
     function: FunctionCall
 
 
 class ChatMessage(BaseModel):
+    """Legacy Chat Completions message stored in older history files"""
+
     role: str
     tool_calls: list[ToolCall] | None = None
     tool_call_id: str | None = None
@@ -114,51 +152,150 @@ class ChatMessage(BaseModel):
     name: str = "Botto"
 
 
-class Chat(BaseModel):
-    messages: list[ChatMessage]
+class InputItem(BaseModel):
+    """A Responses input or output item
+
+    Unknown fields are kept so reasoning items can be replayed with
+    `encrypted_content` when `store` is false.
+
+    `speaker` is local display metadata and is not sent to OpenAI.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    type: str | None = None
+    role: str | None = None
+    content: Any = None
+    name: str | None = None
+    call_id: str | None = None
+    arguments: str | None = None
+    output: str | None = None
+    status: str | None = None
+    id: str | None = None
+    speaker: str | None = None
+
+    def display_name(self) -> str:
+        """Name used when rendering the local transcript"""
+        if self.speaker:
+            return self.speaker
+        if self.role == "user":
+            return "user"
+        return "Botto"
+
+    def display_text(self) -> str | None:
+        """Plain text for the local transcript, if this item has any"""
+        if self.type == FUNCTION_CALL_OUTPUT_TYPE:
+            return self.output
+        if self.type == FUNCTION_CALL_TYPE:
+            return None
+
+        content = self.content
+        if isinstance(content, str):
+            return content
+        if isinstance(content, list):
+            parts: list[str] = []
+            for part in content:
+                if isinstance(part, dict):
+                    if part.get("type") in {"output_text", "input_text", "text"}:
+                        text = part.get("text")
+                        if isinstance(text, str):
+                            parts.append(text)
+                elif isinstance(part, BaseModel):
+                    text = getattr(part, "text", None)
+                    if isinstance(text, str):
+                        parts.append(text)
+            return "".join(parts) if parts else None
+        return None
+
+    def to_api_payload(self) -> dict[str, Any]:
+        """Dump this item for a Responses `input` array"""
+        payload = self.model_dump(exclude_none=True, exclude={"speaker"})
+        if self.type in {None, MESSAGE_TYPE} and self.role == "user":
+            content = self.content
+            if self.speaker and isinstance(content, str):
+                content = f"{self.speaker}: {content}"
+            return {
+                "type": MESSAGE_TYPE,
+                "role": "user",
+                "content": content,
+            }
+        if self.type == FUNCTION_CALL_OUTPUT_TYPE:
+            return {
+                "type": FUNCTION_CALL_OUTPUT_TYPE,
+                "call_id": self.call_id,
+                "output": self.output or "",
+            }
+        payload.setdefault("type", self.type or MESSAGE_TYPE)
+        return payload
+
+
+class ChatContext(BaseModel):
+    """Instructions and input items for the next Responses request"""
+
+    instructions: str
+    input: list[dict[str, Any]]
 
 
 class ChatHistory(BaseModel):
-    messages: dict[str, deque[ChatMessage]]
+    messages: dict[str, deque[InputItem]]
 
-    # Ensure maxlen is always enforced
+    @field_validator("messages", mode="before")
+    @classmethod
+    def convert_legacy_messages(cls, value: Any) -> Any:
+        if not isinstance(value, dict):
+            return value
+
+        converted: dict[str, list[InputItem]] = {}
+        for chat_id, items in value.items():
+            converted_items: list[InputItem] = []
+            for item in items:
+                converted_items.extend(coerce_history_item(item))
+            converted[chat_id] = converted_items
+        return converted
+
     @field_validator("messages", mode="after")
-    def enforce_maxlen(cls, v: dict[str, deque[ChatMessage]]) -> dict[str, deque[ChatMessage]]:
-        # Always reconstruct with maxlen=MAX_CHAT_HISTORY
-        return {k: deque(v, maxlen=MAX_CHAT_HISTORY) for k, v in v.items()}
+    @classmethod
+    def enforce_maxlen(
+        cls, value: dict[str, deque[InputItem]]
+    ) -> dict[str, deque[InputItem]]:
+        return {key: deque(items, maxlen=MAX_CHAT_HISTORY) for key, items in value.items()}
 
 
-class ChatRequest(Chat):
-    tools: list[OpenAITool] | None = None
-    tool_choice: str
+class ResponsesRequest(BaseModel):
+    """Request body for `POST /v1/responses`"""
+
     model: str = "gpt-5.6-sol"
-    parallel_tool_calls: bool = False
+    input: list[dict[str, Any]]
+    instructions: str | None = None
+    tools: list[ResponsesFunctionTool] | None = None
+    tool_choice: str | None = None
+    parallel_tool_calls: bool | None = None
+    store: bool = False
+    include: list[str] = Field(default_factory=lambda: [REASONING_INCLUDE])
 
 
-class ResponseMessage(BaseModel):
-    role: str
-    content: str | None
-    tool_calls: list[ToolCall] | None = None
+class ResponsesResult(BaseModel):
+    """Response body from `POST /v1/responses`"""
 
+    model_config = ConfigDict(extra="allow")
 
-class Choice(BaseModel):
-    index: int
-    message: ResponseMessage
-    finish_reason: str
-
-
-class Usage(BaseModel):
-    prompt_tokens: int
-    completion_tokens: int
-    total_tokens: int
-
-
-class ChatResponse(BaseModel):
     id: str
-    object: str
-    created: int
-    choices: list[Choice]
-    usage: Usage
+    output: list[InputItem] = []
+
+    def function_calls(self) -> list[InputItem]:
+        """Function call items from this response"""
+        return [item for item in self.output if item.type == FUNCTION_CALL_TYPE]
+
+    def output_text(self) -> str:
+        """Concatenated assistant text, matching the Responses SDK helper"""
+        parts: list[str] = []
+        for item in self.output:
+            if item.type != MESSAGE_TYPE:
+                continue
+            text = item.display_text()
+            if text:
+                parts.append(text)
+        return "".join(parts)
 
 
 class ImageRequest(BaseModel):
@@ -189,3 +326,94 @@ class Error(BaseModel):
 
 class ErrorResponse(BaseModel):
     error: Error
+
+
+def coerce_history_item(item: Any) -> list[InputItem]:
+    """Convert a stored history value into Responses input items
+
+    Older `chat_history.json` files used Chat Completions messages. Those are
+    expanded into `function_call` / `function_call_output` / `message` items.
+    """
+    if isinstance(item, InputItem):
+        if _is_legacy_completions_item(item):
+            return _legacy_message_to_items(
+                ChatMessage(
+                    role=item.role or "assistant",
+                    tool_calls=_legacy_tool_calls(item),
+                    tool_call_id=item.call_id,
+                    content=item.content if isinstance(item.content, str) else None,
+                    name=item.speaker or item.name or "Botto",
+                )
+            )
+        return [item]
+
+    if isinstance(item, ChatMessage):
+        return _legacy_message_to_items(item)
+
+    if isinstance(item, BaseModel):
+        item = item.model_dump(exclude_none=True)
+
+    if not isinstance(item, dict):
+        raise TypeError(f"Unsupported chat history item: {type(item)!r}")
+
+    if _is_legacy_completions_dict(item):
+        return _legacy_message_to_items(ChatMessage.model_validate(item))
+
+    payload = dict(item)
+    if "speaker" not in payload and payload.get("role") == "user":
+        name = payload.get("name")
+        if isinstance(name, str):
+            payload["speaker"] = name
+    return [InputItem.model_validate(payload)]
+
+
+def _is_legacy_completions_item(item: InputItem) -> bool:
+    return item.type is None and item.role in {"user", "assistant", "tool", "system"}
+
+
+def _is_legacy_completions_dict(item: dict[str, Any]) -> bool:
+    if item.get("type"):
+        return False
+    return item.get("role") in {"user", "assistant", "tool", "system"}
+
+
+def _legacy_tool_calls(item: InputItem) -> list[ToolCall] | None:
+    extra = item.model_extra or {}
+    tool_calls = extra.get("tool_calls")
+    if not tool_calls:
+        return None
+    return [ToolCall.model_validate(tool_call) for tool_call in tool_calls]
+
+
+def _legacy_message_to_items(message: ChatMessage) -> list[InputItem]:
+    if message.role == "system":
+        return []
+
+    if message.role == "tool":
+        return [
+            InputItem(
+                type=FUNCTION_CALL_OUTPUT_TYPE,
+                call_id=message.tool_call_id,
+                output=message.content or "",
+            )
+        ]
+
+    if message.role == "assistant" and message.tool_calls:
+        return [
+            InputItem(
+                type=FUNCTION_CALL_TYPE,
+                call_id=tool_call.id,
+                name=tool_call.function.name,
+                arguments=tool_call.function.arguments,
+            )
+            for tool_call in message.tool_calls
+        ]
+
+    return [
+        InputItem(
+            type=MESSAGE_TYPE,
+            role=message.role,
+            content=message.content,
+            speaker=message.name,
+        )
+    ]

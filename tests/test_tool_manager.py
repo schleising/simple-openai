@@ -47,6 +47,17 @@ class ToolManagerFailureTests(unittest.TestCase):
         result = self.manager.call_function("no_such_tool")
         self.assertIn("does not exist", result)
 
+    def test_tool_list_uses_responses_shape(self) -> None:
+        self.manager.add_tool(_tool("internet_search"), lambda **kwargs: "ok")
+
+        tools = self.manager.get_json_tool_list()
+        self.assertIsNotNone(tools)
+        assert tools is not None
+        payload = tools[0].model_dump(exclude_none=True)
+        self.assertEqual(payload["name"], "internet_search")
+        self.assertFalse(payload["strict"])
+        self.assertNotIn("function", payload)
+
 
 if __name__ == "__main__":
     unittest.main()

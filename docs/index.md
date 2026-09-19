@@ -108,9 +108,9 @@ The output of the functions is a [SimpleOpenaiResponse](simple_openai/responses.
 
 ### Functions
 
-Functions can be added to the client using the `add_function` method. This method takes a function name and a function as arguments. The function should take an [OpenAIFunction](simple_openai/public_models.md/#src.simple_openai.models.open_ai_models.OpenAIFunction) object as its first argument, and the Python function itself as the second argument.
+Functions can be added to the client using the `add_tool` method. This method takes an [OpenAITool](simple_openai/public_models.md/#src.simple_openai.models.open_ai_models.OpenAITool) definition and a Python function.
 
-The Python function should return a string, which will be passed to the API using the `function` role
+The Python function should return a string, which is sent back to the model as a `function_call_output` item.
 
 ## Documentation
 

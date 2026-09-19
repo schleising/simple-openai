@@ -56,21 +56,20 @@ class ToolManager:
             tool_definition, function
         )
 
-    def get_json_tool_list(self) -> list[open_ai_models.OpenAITool] | None:
-        """Get the list of tools
+    def get_json_tool_list(self) -> list[open_ai_models.ResponsesFunctionTool] | None:
+        """Get the list of tools in Responses API format
 
         Returns:
-            list[open_ai_models.OpenAITool] | None: The list of tools or None if there are no tools
+            list[open_ai_models.ResponsesFunctionTool] | None: The list of tools or None if there are no tools
         """
-        # Get the list of functions
-        tools = [tool.tool_definition for tool in self._tools.values()]
+        tools = [
+            open_ai_models.ResponsesFunctionTool.from_openai_tool(tool.tool_definition)
+            for tool in self._tools.values()
+        ]
 
         if tools:
-            # Return the list of functions
             return tools
-        else:
-            # Return None
-            return None
+        return None
 
     def _parse_arguments(self, arguments: str) -> dict[str, Any]:
         """Parse a tool-call arguments JSON object

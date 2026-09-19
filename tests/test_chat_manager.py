@@ -4,140 +4,199 @@ import unittest
 from pathlib import Path
 
 from simple_openai.chat_manager import INCOMPLETE_TOOL_RESULT, ChatManager
-from simple_openai.constants import CHAT_HISTORY_FILE
+from simple_openai.constants import CHAT_HISTORY_FILE, FUNCTION_CALL_OUTPUT_TYPE, FUNCTION_CALL_TYPE, MESSAGE_TYPE
 from simple_openai.models import open_ai_models
 
 
-def _tool_call(call_id: str, name: str = "internet_search") -> open_ai_models.ToolCall:
-    return open_ai_models.ToolCall(
-        id=call_id,
-        type="function",
-        function=open_ai_models.FunctionCall(
-            name=name,
-            arguments='{"query": "test"}',
-        ),
+def _function_call(call_id: str, name: str = "internet_search") -> open_ai_models.InputItem:
+    return open_ai_models.InputItem(
+        type=FUNCTION_CALL_TYPE,
+        call_id=call_id,
+        name=name,
+        arguments='{"query": "test"}',
     )
 
 
-def _assistant_tool_call(call_id: str) -> open_ai_models.ChatMessage:
-    return open_ai_models.ChatMessage(
-        role="assistant",
-        tool_calls=[_tool_call(call_id)],
-        name="Botto",
+def _function_output(call_id: str, output: str = "ok") -> open_ai_models.InputItem:
+    return open_ai_models.InputItem(
+        type=FUNCTION_CALL_OUTPUT_TYPE,
+        call_id=call_id,
+        output=output,
     )
 
 
-def _tool_result(call_id: str, content: str = "ok") -> open_ai_models.ChatMessage:
-    return open_ai_models.ChatMessage(
-        role="tool",
-        tool_call_id=call_id,
+def _user_message(content: str) -> open_ai_models.InputItem:
+    return open_ai_models.InputItem(
+        type=MESSAGE_TYPE,
+        role="user",
         content=content,
-        name="Botto",
+        speaker="Stephen",
     )
 
 
-def _user_message(content: str) -> open_ai_models.ChatMessage:
-    return open_ai_models.ChatMessage(role="user", content=content, name="Stephen")
+def _assistant_message(content: str) -> open_ai_models.InputItem:
+    return open_ai_models.InputItem(
+        type=MESSAGE_TYPE,
+        role="assistant",
+        content=content,
+        speaker="Botto",
+    )
+
+
+def _item_types(context: open_ai_models.ChatContext) -> list[str]:
+    return [str(item.get("type")) for item in context.input]
 
 
 class ChatManagerToolHistoryTests(unittest.TestCase):
     def setUp(self) -> None:
         self.chat = ChatManager("You are a test assistant.")
 
-    def test_unanswered_tool_call_is_closed_before_next_user_message(self) -> None:
-        self.chat.add_message(_assistant_tool_call("call_1"))
-        chat = self.chat.add_message(_user_message("Hello...?"))
+    def test_unanswered_function_call_is_closed_before_next_user_message(self) -> None:
+        self.chat.add_item(_function_call("call_1"))
+        context = self.chat.add_item(_user_message("Hello...?"))
 
-        messages = [message for message in chat.messages if message.role != "system"]
         self.assertEqual(
-            [message.role for message in messages],
-            ["assistant", "tool", "user"],
+            _item_types(context),
+            [FUNCTION_CALL_TYPE, FUNCTION_CALL_OUTPUT_TYPE, MESSAGE_TYPE],
         )
-        self.assertEqual(messages[1].tool_call_id, "call_1")
-        self.assertEqual(messages[1].content, INCOMPLETE_TOOL_RESULT)
+        self.assertEqual(context.input[1]["call_id"], "call_1")
+        self.assertEqual(context.input[1]["output"], INCOMPLETE_TOOL_RESULT)
+        self.assertEqual(context.input[2]["content"], "Stephen: Hello...?")
 
     def test_complete_tool_sequence_is_left_alone(self) -> None:
-        self.chat.add_message(_assistant_tool_call("call_1"))
-        self.chat.add_message(_tool_result("call_1", "search results"))
-        self.chat.add_message(
-            open_ai_models.ChatMessage(
-                role="assistant", content="Here you go", name="Botto"
-            )
-        )
+        self.chat.add_item(_function_call("call_1"))
+        self.chat.add_item(_function_output("call_1", "search results"))
+        self.chat.add_item(_assistant_message("Here you go"))
 
-        chat = self.chat.add_message(_user_message("Thanks"))
-        messages = [message for message in chat.messages if message.role != "system"]
+        context = self.chat.add_item(_user_message("Thanks"))
         self.assertEqual(
-            [message.role for message in messages],
-            ["assistant", "tool", "assistant", "user"],
+            _item_types(context),
+            [
+                FUNCTION_CALL_TYPE,
+                FUNCTION_CALL_OUTPUT_TYPE,
+                MESSAGE_TYPE,
+                MESSAGE_TYPE,
+            ],
         )
-        self.assertEqual(messages[1].content, "search results")
+        self.assertEqual(context.input[1]["output"], "search results")
 
-    def test_real_tool_result_can_follow_an_open_tool_call(self) -> None:
-        self.chat.add_message(_assistant_tool_call("call_1"))
-        chat = self.chat.add_message(_tool_result("call_1", "search results"))
+    def test_real_tool_result_can_follow_an_open_function_call(self) -> None:
+        self.chat.add_item(_function_call("call_1"))
+        context = self.chat.add_item(_function_output("call_1", "search results"))
 
-        messages = [message for message in chat.messages if message.role != "system"]
-        self.assertEqual([message.role for message in messages], ["assistant", "tool"])
-        self.assertEqual(messages[1].content, "search results")
+        self.assertEqual(
+            _item_types(context),
+            [FUNCTION_CALL_TYPE, FUNCTION_CALL_OUTPUT_TYPE],
+        )
+        self.assertEqual(context.input[1]["output"], "search results")
 
     def test_missing_tool_result_is_inserted_before_later_user_message(self) -> None:
-        self.chat.add_message(_assistant_tool_call("call_1"))
+        self.chat.add_item(_function_call("call_1"))
         self.chat._chat_history.messages["default"].append(_user_message("Hello...?"))
 
-        chat = self.chat.add_message(_user_message("Are you there?"))
-        messages = [message for message in chat.messages if message.role != "system"]
+        context = self.chat.add_item(_user_message("Are you there?"))
         self.assertEqual(
-            [message.role for message in messages],
-            ["assistant", "tool", "user", "user"],
+            _item_types(context),
+            [
+                FUNCTION_CALL_TYPE,
+                FUNCTION_CALL_OUTPUT_TYPE,
+                MESSAGE_TYPE,
+                MESSAGE_TYPE,
+            ],
         )
-        self.assertEqual(messages[1].tool_call_id, "call_1")
+        self.assertEqual(context.input[1]["call_id"], "call_1")
 
     def test_partial_parallel_tool_results_are_completed(self) -> None:
-        self.chat.add_message(
-            open_ai_models.ChatMessage(
-                role="assistant",
-                tool_calls=[_tool_call("call_1"), _tool_call("call_2")],
-                name="Botto",
-            )
-        )
-        self.chat.add_message(_tool_result("call_1", "first result"))
+        self.chat.add_items([_function_call("call_1"), _function_call("call_2")])
+        self.chat.add_item(_function_output("call_1", "first result"))
 
-        chat = self.chat.add_message(_user_message("Hello...?"))
-        messages = [message for message in chat.messages if message.role != "system"]
+        context = self.chat.add_item(_user_message("Hello...?"))
         self.assertEqual(
-            [message.role for message in messages],
-            ["assistant", "tool", "tool", "user"],
+            _item_types(context),
+            [
+                FUNCTION_CALL_TYPE,
+                FUNCTION_CALL_TYPE,
+                FUNCTION_CALL_OUTPUT_TYPE,
+                FUNCTION_CALL_OUTPUT_TYPE,
+                MESSAGE_TYPE,
+            ],
         )
-        self.assertEqual(messages[1].tool_call_id, "call_1")
-        self.assertEqual(messages[2].tool_call_id, "call_2")
-        self.assertEqual(messages[2].content, INCOMPLETE_TOOL_RESULT)
+        self.assertEqual(context.input[2]["call_id"], "call_1")
+        self.assertEqual(context.input[3]["call_id"], "call_2")
+        self.assertEqual(context.input[3]["output"], INCOMPLETE_TOOL_RESULT)
 
     def test_leading_orphaned_tool_results_are_removed(self) -> None:
         short_chat = ChatManager("You are a test assistant.", max_messages=2)
-        short_chat.add_message(_assistant_tool_call("call_1"))
-        short_chat.add_message(_tool_result("call_1"))
-        short_chat.add_message(_user_message("next"))
+        short_chat.add_item(_function_call("call_1"))
+        short_chat.add_item(_function_output("call_1"))
+        short_chat.add_item(_user_message("next"))
 
         remaining = list(short_chat._chat_history.messages["default"])
-        self.assertEqual([message.role for message in remaining], ["user"])
+        self.assertEqual([item.type for item in remaining], [MESSAGE_TYPE])
 
-    def test_broken_history_is_repaired_on_load(self) -> None:
+    def test_user_name_is_prefixed_in_api_input_but_not_the_local_transcript(self) -> None:
+        self.chat.add_user_message("Where is Alaska?", name="Steve")
+        self.chat.add_item(_assistant_message("In the far north."))
+
+        context = self.chat._build_context("default", add_date_time=False)
+        self.assertEqual(context.input[0]["content"], "Steve: Where is Alaska?")
+        self.assertEqual(
+            self.chat.get_chat(),
+            "Steve: Where is Alaska?\nBotto: In the far north.",
+        )
+
+    def test_request_uses_instructions_and_disables_storage(self) -> None:
+        self.chat.add_user_message("Hello", name="Steve")
+        request = self.chat.build_request(
+            None,
+            chat_id="default",
+            add_date_time=False,
+            allow_tool_calls=True,
+        )
+
+        self.assertEqual(request["instructions"], "You are a test assistant.")
+        self.assertFalse(request["store"])
+        self.assertEqual(request["include"], ["reasoning.encrypted_content"])
+        self.assertNotIn("tools", request)
+        self.assertNotIn("previous_response_id", request)
+
+    def test_broken_completions_history_is_converted_and_repaired_on_load(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             storage_path = Path(temp_dir)
-            history = open_ai_models.ChatHistory(
-                messages={
-                    "-417681459": [
-                        _user_message(
-                            "A top safety researcher at Anthropic has warned AI..."
-                        ),
-                        _assistant_tool_call("call_Yj6AZxSRdNNmju6S1r8Ja7Xy"),
-                        _user_message("Hello...?"),
-                    ]
-                }
-            )
             (storage_path / CHAT_HISTORY_FILE).write_text(
-                history.model_dump_json(exclude_none=True, indent=2)
+                json.dumps(
+                    {
+                        "messages": {
+                            "-417681459": [
+                                {
+                                    "role": "user",
+                                    "content": "A top safety researcher at Anthropic has warned AI...",
+                                    "name": "Stephen",
+                                },
+                                {
+                                    "role": "assistant",
+                                    "name": "Botto",
+                                    "tool_calls": [
+                                        {
+                                            "id": "call_Yj6AZxSRdNNmju6S1r8Ja7Xy",
+                                            "type": "function",
+                                            "function": {
+                                                "name": "internet_search",
+                                                "arguments": '{"query": "test"}',
+                                            },
+                                        }
+                                    ],
+                                },
+                                {
+                                    "role": "user",
+                                    "content": "Hello...?",
+                                    "name": "Stephen",
+                                },
+                            ]
+                        }
+                    },
+                    indent=2,
+                )
             )
 
             ChatManager("You are a test assistant.", storage_path=storage_path)
@@ -145,14 +204,19 @@ class ChatManagerToolHistoryTests(unittest.TestCase):
             saved = json.loads((storage_path / CHAT_HISTORY_FILE).read_text())
             messages = saved["messages"]["-417681459"]
             self.assertEqual(
-                [message["role"] for message in messages],
-                ["user", "assistant", "tool", "user"],
+                [message["type"] for message in messages],
+                [
+                    MESSAGE_TYPE,
+                    FUNCTION_CALL_TYPE,
+                    FUNCTION_CALL_OUTPUT_TYPE,
+                    MESSAGE_TYPE,
+                ],
             )
             self.assertEqual(
-                messages[2]["tool_call_id"],
+                messages[2]["call_id"],
                 "call_Yj6AZxSRdNNmju6S1r8Ja7Xy",
             )
-            self.assertEqual(messages[2]["content"], INCOMPLETE_TOOL_RESULT)
+            self.assertEqual(messages[2]["output"], INCOMPLETE_TOOL_RESULT)
 
 
 if __name__ == "__main__":

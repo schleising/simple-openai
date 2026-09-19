@@ -6,7 +6,7 @@ If you wish to use the async version, you should use the [AsyncSimple OpenAI API
 """
 
 from pathlib import Path
-from typing import Callable
+from typing import Any, Callable
 import requests
 
 from . import constants
@@ -108,6 +108,21 @@ class SimpleOpenai:
         """
         self._tool_manager.add_tool(tool_definition, function)
 
+    def _post_responses(
+        self, request_body: dict[str, Any]
+    ) -> open_ai_models.ResponsesResult | open_ai_models.ErrorResponse:
+        """Send a Responses API request"""
+        response = requests.post(
+            constants.FULL_RESPONSES_URL,
+            json=request_body,
+            headers=self._headers,
+        )
+
+        if response.status_code == requests.codes.OK:
+            return open_ai_models.ResponsesResult.model_validate_json(response.text)
+
+        return open_ai_models.ErrorResponse.model_validate_json(response.text)
+
     def get_function_response(
         self,
         chat_id: str,
@@ -117,7 +132,7 @@ class SimpleOpenai:
         add_date_time: bool = False,
         function_arguments: str | None = None,
         **kwargs,
-    ) -> open_ai_models.ChatResponse | open_ai_models.ErrorResponse:
+    ) -> open_ai_models.ResponsesResult | open_ai_models.ErrorResponse:
         """Get a function response
 
         Args:
@@ -128,7 +143,7 @@ class SimpleOpenai:
             function_arguments (str, optional): The JSON arguments string from OpenAI.
 
         Returns:
-            open_ai_models.ChatResponse | open_ai_models.ErrorResponse: The chat response or error response
+            open_ai_models.ResponsesResult | open_ai_models.ErrorResponse: The Responses result or error response
         """
 
         # Call the function. Failures are recorded as a tool result so the chat
@@ -144,56 +159,21 @@ class SimpleOpenai:
                 **kwargs,
             )
 
-        # Add the message to the chat
-        messages = self._chat.add_message(
-            open_ai_models.ChatMessage(
-                role="tool",
-                tool_call_id=tool_call_id,
-                content=new_prompt,
-                name="Botto",
-            ),
+        self._chat.add_function_call_output(
+            call_id=tool_call_id,
+            output=new_prompt,
             chat_id=chat_id,
             add_date_time=add_date_time,
-        ).messages
-
-        # Set the tool choice to auto if tool calls are allowed
-        if allow_tool_calls:
-            tool_choice = "auto"
-        else:
-            tool_choice = "none"
-
-        # Create the request body
-        request_body = open_ai_models.ChatRequest(
-            messages=messages,
-            tools=self._tool_manager.get_json_tool_list(),
-            tool_choice=tool_choice,
         )
 
-        # Delete the tools from the request body if there are no tools
-        if request_body.tools is None:
-            del request_body.tool_choice
-            del request_body.parallel_tool_calls
-
-        # Send the request
-        response = requests.post(constants.CHAT_URL, json=request_body.model_dump(exclude_none=True))
-
-        # Check the status code
-        if response.status_code == requests.codes.OK:
-            # Get the response content
-            response_text = response.text
-
-            # Parse the response body
-            response_body = open_ai_models.ChatResponse.model_validate_json(
-                response_text
+        return self._post_responses(
+            self._chat.build_request(
+                self._tool_manager.get_json_tool_list(),
+                chat_id=chat_id,
+                add_date_time=add_date_time,
+                allow_tool_calls=allow_tool_calls,
             )
-        else:
-            # Parse the error response body
-            response_body = open_ai_models.ErrorResponse.model_validate_json(
-                response.text
-            )
-
-        # Return the response
-        return response_body
+        )
 
     def get_chat_response(
         self,
@@ -218,129 +198,78 @@ class SimpleOpenai:
             SimpleOpenaiResponse: The chat response, the value of `success` should be checked before using the value of `message`
 
         """
-        # Add the message to the chat
-        messages = self._chat.add_message(
-            open_ai_models.ChatMessage(role="user", content=prompt, name=name),
+        self._chat.add_user_message(
+            prompt,
+            name=name,
             chat_id=chat_id,
             add_date_time=add_date_time,
-        ).messages
-
-        # Create the request body
-        request_body = open_ai_models.ChatRequest(
-            messages=messages,
-            tools=self._tool_manager.get_json_tool_list(),
-            tool_choice="auto",
         )
 
-        # Delete the tools from the request body if there are no tools
-        if request_body.tools is None:
-            del request_body.tool_choice
-            del request_body.parallel_tool_calls
-
-        # Send the request
-        response = requests.post(constants.CHAT_URL, json=request_body.model_dump(exclude_none=True))
-
-        # Check the status code
-        if response.status_code == requests.codes.OK:
-            # Get the response content
-            response_text = response.text
-
-            # Parse the response body
-            response_body = open_ai_models.ChatResponse.model_validate_json(
-                response_text
+        response_body = self._post_responses(
+            self._chat.build_request(
+                self._tool_manager.get_json_tool_list(),
+                chat_id=chat_id,
+                add_date_time=add_date_time,
+                allow_tool_calls=True,
             )
+        )
 
-            # Set the Tool Call counter to 0
-            tool_call_counter = 0
+        if isinstance(response_body, open_ai_models.ErrorResponse):
+            return SimpleOpenaiResponse(False, response_body.error.message)
 
-            # Check if a function was called, and loop until no more functions are called
-            while (
-                response_body.choices[0].finish_reason == constants.OPEN_AI_TOOL_CALLS
-                and response_body.choices[0].message.tool_calls is not None
-            ):
-                tool_calls = response_body.choices[0].message.tool_calls
-                print(f"Calling {tool_calls[0].function.name}")
-                # Add the response to the chat
-                self._chat.add_message(
-                    open_ai_models.ChatMessage(
-                        role="assistant",
-                        tool_calls=tool_calls,
-                        name="Botto",
-                    ),
-                    chat_id=chat_id,
-                    add_date_time=add_date_time,
-                )
+        tool_call_counter = 0
 
-                # Increment the tool call counter
-                tool_call_counter += 1
+        while response_body.function_calls():
+            function_calls = response_body.function_calls()
+            print(f"Calling {function_calls[0].name}")
 
-                # Record a result for every tool_call before requesting the
-                # next completion. OpenAI rejects history that leaves any
-                # tool_call_id unanswered.
-                for extra_call in tool_calls[:-1]:
-                    extra_result = self._tool_manager.call_function_from_arguments(
-                        extra_call.function.name,
-                        extra_call.function.arguments,
-                    )
-                    self._chat.add_message(
-                        open_ai_models.ChatMessage(
-                            role="tool",
-                            tool_call_id=extra_call.id,
-                            content=extra_result,
-                            name="Botto",
-                        ),
-                        chat_id=chat_id,
-                        add_date_time=add_date_time,
-                    )
-
-                last_tool_call = tool_calls[-1]
-
-                # Call the function
-                response_body = self.get_function_response(
-                    chat_id=chat_id,
-                    tool_call_id=last_tool_call.id,
-                    function_name=last_tool_call.function.name,
-                    allow_tool_calls=tool_call_counter < max_tool_calls,
-                    add_date_time=add_date_time,
-                    function_arguments=last_tool_call.function.arguments,
-                )
-
-                # Check if the response is an error
-                if isinstance(response_body, open_ai_models.ErrorResponse):
-                    # Return the error response
-                    return SimpleOpenaiResponse(False, response_body.error.message)
-
-            # Create the response
-            if response_body.choices[0].message.content is not None:
-                open_ai_response = SimpleOpenaiResponse(
-                    True, response_body.choices[0].message.content
-                )
-
-            else:
-                open_ai_response = SimpleOpenaiResponse(True, "No response")
-
-            # Add the response to the chat
-            self._chat.add_message(
-                open_ai_models.ChatMessage(
-                    role="assistant",
-                    content=open_ai_response.message,
-                    name="Botto",
-                ),
+            self._chat.add_items(
+                [
+                    open_ai_models.InputItem.model_validate(item.model_dump())
+                    for item in response_body.output
+                ],
                 chat_id=chat_id,
                 add_date_time=add_date_time,
             )
 
-        else:
-            # Parse the error response body
-            response_body = open_ai_models.ErrorResponse.model_validate_json(
-                response.text
+            tool_call_counter += 1
+
+            for function_call in function_calls[:-1]:
+                extra_result = self._tool_manager.call_function_from_arguments(
+                    function_call.name or "",
+                    function_call.arguments or "{}",
+                )
+                self._chat.add_function_call_output(
+                    call_id=function_call.call_id or "",
+                    output=extra_result,
+                    chat_id=chat_id,
+                    add_date_time=add_date_time,
+                )
+
+            last_tool_call = function_calls[-1]
+            response_body = self.get_function_response(
+                chat_id=chat_id,
+                tool_call_id=last_tool_call.call_id or "",
+                function_name=last_tool_call.name or "",
+                allow_tool_calls=tool_call_counter < max_tool_calls,
+                add_date_time=add_date_time,
+                function_arguments=last_tool_call.arguments,
             )
 
-            # Create the response
-            open_ai_response = SimpleOpenaiResponse(False, response_body.error.message)
+            if isinstance(response_body, open_ai_models.ErrorResponse):
+                return SimpleOpenaiResponse(False, response_body.error.message)
 
-        # Return the response
-        return open_ai_response
+        self._chat.add_items(
+            [
+                open_ai_models.InputItem.model_validate(item.model_dump())
+                for item in response_body.output
+            ],
+            chat_id=chat_id,
+            add_date_time=add_date_time,
+        )
+
+        message = response_body.output_text() or "No response"
+        return SimpleOpenaiResponse(True, message)
 
     def get_image_url(self, prompt: str, style: str = "vivid") -> SimpleOpenaiResponse:
         """Get an image response from OpenAI

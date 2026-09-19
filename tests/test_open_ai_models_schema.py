@@ -46,6 +46,45 @@ class OpenAISchemaModelTests(unittest.TestCase):
         self.assertFalse(request_schema["additionalProperties"])
         self.assertFalse(payload["function"]["parameters"]["additionalProperties"])
 
+    def test_responses_tool_is_internally_tagged_and_not_strict(self) -> None:
+        tool = open_ai_models.ResponsesFunctionTool.from_openai_tool(
+            open_ai_models.OpenAITool(
+                function=open_ai_models.OpenAIFunction(
+                    name="get_weather",
+                    description="Look up the weather",
+                    parameters=open_ai_models.OpenAIParameters(properties={}),
+                )
+            )
+        )
+
+        payload = tool.model_dump(exclude_none=True)
+        self.assertEqual(payload["type"], "function")
+        self.assertEqual(payload["name"], "get_weather")
+        self.assertFalse(payload["strict"])
+        self.assertNotIn("function", payload)
+
+    def test_output_text_joins_message_items(self) -> None:
+        result = open_ai_models.ResponsesResult.model_validate(
+            {
+                "id": "resp_123",
+                "output": [
+                    {"type": "reasoning", "id": "rs_1", "encrypted_content": "abc"},
+                    {
+                        "type": "message",
+                        "role": "assistant",
+                        "content": [
+                            {"type": "output_text", "text": "Hello "},
+                            {"type": "output_text", "text": "world"},
+                        ],
+                    },
+                ],
+            }
+        )
+
+        self.assertEqual(result.output_text(), "Hello world")
+        self.assertEqual(result.output[0].to_api_payload()["encrypted_content"], "abc")
+        self.assertEqual(result.function_calls(), [])
+
 
 if __name__ == "__main__":
     unittest.main()
