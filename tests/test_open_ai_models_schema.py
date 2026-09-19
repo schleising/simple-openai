@@ -82,7 +82,7 @@ class OpenAISchemaModelTests(unittest.TestCase):
         )
 
         self.assertEqual(result.output_text(), "Hello world")
-        self.assertEqual(result.output[0].to_api_item().model_dump()["encrypted_content"], "abc")
+        self.assertTrue(result.output[0].is_reasoning())
         self.assertEqual(result.function_calls(), [])
 
 

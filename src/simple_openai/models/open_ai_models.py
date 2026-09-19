@@ -20,7 +20,8 @@ from simple_openai.constants import (
     FUNCTION_CALL_TYPE,
     MAX_CHAT_HISTORY,
     MESSAGE_TYPE,
-    REASONING_INCLUDE,
+    REASONING_EFFORT_NONE,
+    REASONING_TYPE,
 )
 
 JsonScalar: TypeAlias = str | int | float | bool | None
@@ -168,8 +169,8 @@ class ContentPart(BaseModel):
 class InputItem(BaseModel):
     """A Responses input or output item
 
-    Unknown fields are kept so reasoning items can be replayed with
-    `encrypted_content` when `store` is false.
+    Unknown fields are kept so extra Responses metadata can round-trip.
+    Reasoning items are not sent back to the API.
 
     `speaker` is local display metadata and is not sent to OpenAI.
     """
@@ -186,6 +187,10 @@ class InputItem(BaseModel):
     status: str | None = None
     id: str | None = None
     speaker: str | None = None
+
+    def is_reasoning(self) -> bool:
+        """Whether this item is a reasoning payload that should not be replayed"""
+        return self.type == REASONING_TYPE
 
     def display_name(self) -> str:
         """Name used when rendering the local transcript"""
@@ -266,6 +271,12 @@ class ChatHistory(BaseModel):
         return {key: deque(items, maxlen=MAX_CHAT_HISTORY) for key, items in value.items()}
 
 
+class ReasoningConfig(BaseModel):
+    """Reasoning settings for the Responses API"""
+
+    effort: str = REASONING_EFFORT_NONE
+
+
 class ResponsesRequest(BaseModel):
     """Request body for `POST /v1/responses`"""
 
@@ -276,7 +287,7 @@ class ResponsesRequest(BaseModel):
     tool_choice: str | None = None
     parallel_tool_calls: bool | None = None
     store: bool = False
-    include: list[str] = Field(default_factory=lambda: [REASONING_INCLUDE])
+    reasoning: ReasoningConfig = Field(default_factory=ReasoningConfig)
 
 
 class ResponsesResult(BaseModel):

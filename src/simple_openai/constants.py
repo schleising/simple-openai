@@ -12,8 +12,8 @@ MAX_CHAT_HISTORY = 21
 CHAT_HISTORY_FILE = Path("chat_history.json")
 DEFAULT_CHAT_ID = "default"
 
-REASONING_INCLUDE = "reasoning.encrypted_content"
 FUNCTION_CALL_TYPE = "function_call"
 FUNCTION_CALL_OUTPUT_TYPE = "function_call_output"
 MESSAGE_TYPE = "message"
 REASONING_TYPE = "reasoning"
+REASONING_EFFORT_NONE = "none"

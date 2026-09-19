@@ -62,7 +62,8 @@ class SimpleOpenaiResponsesTests(unittest.TestCase):
         body = post.call_args.kwargs["json"]
         self.assertEqual(url, FULL_RESPONSES_URL)
         self.assertFalse(body["store"])
-        self.assertEqual(body["include"], ["reasoning.encrypted_content"])
+        self.assertEqual(body["reasoning"]["effort"], "none")
+        self.assertNotIn("include", body)
         self.assertEqual(body["input"][0]["content"], "Steve: Hello")
         self.assertNotIn("previous_response_id", body)
 
@@ -96,11 +97,11 @@ class SimpleOpenaiResponsesTests(unittest.TestCase):
         item_types = [item["type"] for item in second_body["input"]]
         self.assertEqual(
             item_types,
-            ["message", "reasoning", "function_call", "function_call_output"],
+            ["message", "function_call", "function_call_output"],
         )
-        self.assertEqual(second_body["input"][1]["encrypted_content"], "encrypted")
-        self.assertEqual(second_body["input"][3]["output"], "search results")
+        self.assertEqual(second_body["input"][2]["output"], "search results")
         self.assertEqual(second_body["tool_choice"], "none")
+        self.assertEqual(second_body["reasoning"]["effort"], "none")
         self.assertFalse(second_body["store"])
 
 

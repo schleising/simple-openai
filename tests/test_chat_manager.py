@@ -156,10 +156,68 @@ class ChatManagerToolHistoryTests(unittest.TestCase):
 
         self.assertEqual(request.instructions, "You are a test assistant.")
         self.assertFalse(request.store)
-        self.assertEqual(request.include, ["reasoning.encrypted_content"])
+        self.assertEqual(request.reasoning.effort, "none")
         self.assertIsNone(request.tools)
         dumped = request.model_dump(exclude_none=True)
+        self.assertNotIn("include", dumped)
         self.assertNotIn("previous_response_id", dumped)
+
+    def test_reasoning_items_are_not_sent_to_the_api(self) -> None:
+        self.chat.add_user_message("Hello", name="Steve")
+        self.chat._chat_history.messages["default"].append(
+            open_ai_models.InputItem(
+                type="reasoning",
+                id="rs_1",
+                encrypted_content="encrypted",
+            )
+        )
+        self.chat.add_item(_assistant_message("Hi"))
+
+        context = self.chat._build_context("default", add_date_time=False)
+        self.assertEqual(_item_types(context), [MESSAGE_TYPE, MESSAGE_TYPE])
+        self.assertFalse(any(item.is_reasoning() for item in context.input))
+
+    def test_stored_reasoning_items_are_pruned_on_load(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            storage_path = Path(temp_dir)
+            (storage_path / CHAT_HISTORY_FILE).write_text(
+                json.dumps(
+                    {
+                        "messages": {
+                            "default": [
+                                {
+                                    "type": MESSAGE_TYPE,
+                                    "role": "user",
+                                    "content": "Hello",
+                                    "speaker": "Steve",
+                                },
+                                {
+                                    "type": "reasoning",
+                                    "id": "rs_1",
+                                    "encrypted_content": "encrypted",
+                                },
+                                {
+                                    "type": MESSAGE_TYPE,
+                                    "role": "assistant",
+                                    "content": "Hi",
+                                    "speaker": "Botto",
+                                },
+                            ]
+                        }
+                    },
+                    indent=2,
+                )
+            )
+
+            chat = ChatManager("You are a test assistant.", storage_path=storage_path)
+            context = chat._build_context("default", add_date_time=False)
+
+            self.assertEqual(_item_types(context), [MESSAGE_TYPE, MESSAGE_TYPE])
+            saved = json.loads((storage_path / CHAT_HISTORY_FILE).read_text())
+            self.assertEqual(
+                [message["type"] for message in saved["messages"]["default"]],
+                [MESSAGE_TYPE, MESSAGE_TYPE],
+            )
 
     def test_broken_completions_history_is_converted_and_repaired_on_load(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

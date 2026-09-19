@@ -70,9 +70,11 @@ class ChatManager:
                         f.read()
                     )
 
-                # Close any unanswered function calls left behind by a previous failure
+                # Drop stored reasoning and close unanswered function calls
                 repaired = False
                 for chat_id in list(self._chat_history.messages):
+                    if self._prune_reasoning(chat_id):
+                        repaired = True
                     if self._repair_chat(chat_id, close_trailing=True):
                         repaired = True
 
@@ -121,6 +123,7 @@ class ChatManager:
         Returns:
             open_ai_models.ChatContext: The instructions and input for the next request
         """
+        items = [item for item in items if not item.is_reasoning()]
         if not items:
             return self._build_context(chat_id, add_date_time)
 
@@ -271,21 +274,40 @@ class ChatManager:
         else:
             instructions = self._system_message
 
-        items = list(self._chat_history.messages.get(chat_id, ()))
+        items = [
+            item.to_api_item()
+            for item in self._chat_history.messages.get(chat_id, ())
+            if not item.is_reasoning()
+        ]
         return open_ai_models.ChatContext(
             instructions=instructions,
-            input=[item.to_api_item() for item in items],
+            input=items,
         )
 
     def _should_close_before(self, items: list[open_ai_models.InputItem]) -> bool:
         """Whether unanswered function calls should be closed before these items"""
         for item in items:
-            if item.type in {
-                FUNCTION_CALL_TYPE,
-                FUNCTION_CALL_OUTPUT_TYPE,
-                "reasoning",
-            }:
+            if item.type in {FUNCTION_CALL_TYPE, FUNCTION_CALL_OUTPUT_TYPE}:
                 return False
+        return True
+
+    def _prune_reasoning(self, chat_id: str) -> bool:
+        """Remove stored reasoning items from a chat
+
+        Returns:
+            bool: True if any reasoning items were removed
+        """
+        if chat_id not in self._chat_history.messages:
+            return False
+
+        current_items = list(self._chat_history.messages[chat_id])
+        kept_items = [item for item in current_items if not item.is_reasoning()]
+        if len(kept_items) == len(current_items):
+            return False
+
+        self._chat_history.messages[chat_id] = deque(
+            kept_items, maxlen=self._max_messages
+        )
         return True
 
     def _pop_orphaned_leading_outputs(self, chat_id: str) -> None:
