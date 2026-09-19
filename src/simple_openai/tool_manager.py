@@ -12,10 +12,13 @@ Call the tool using the call_function method for synchronous functions or the as
 """
 
 import json
-from typing import Any, Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import TypeAlias
 
 from .models import open_ai_models
+
+ToolCallback: TypeAlias = Callable[..., str] | Callable[..., Awaitable[str]]
 
 
 @dataclass
@@ -24,13 +27,13 @@ class OpenAIToolMapping:
 
     This class represents an OpenAI tool mapping.
 
-    Args:
-        tool_definition (OpenAITool): The description of the tool
-        function (Callable): The function to call
+        Args:
+            tool_definition (OpenAITool): The description of the tool
+            function (ToolCallback): The function to call
     """
 
     tool_definition: open_ai_models.OpenAITool
-    function: Callable
+    function: ToolCallback
 
 
 class ToolManager:
@@ -43,13 +46,13 @@ class ToolManager:
         self._tools: dict[str, OpenAIToolMapping] = {}
 
     def add_tool(
-        self, tool_definition: open_ai_models.OpenAITool, function: Callable
+        self, tool_definition: open_ai_models.OpenAITool, function: ToolCallback
     ) -> None:
         """Add a tool to the tool manager
 
         Args:
             tool_definition (OpenAITool): The tool definition
-            function (Callable): The function to call
+            function (ToolCallback): The function to call
         """
         # Add the function to the function manager
         self._tools[tool_definition.function.name] = OpenAIToolMapping(
@@ -71,24 +74,21 @@ class ToolManager:
             return tools
         return None
 
-    def _parse_arguments(self, arguments: str) -> dict[str, Any]:
+    def _parse_arguments(self, arguments: str) -> dict[str, open_ai_models.JsonValue]:
         """Parse a tool-call arguments JSON object
 
         Args:
             arguments (str): The JSON arguments string from OpenAI
 
         Returns:
-            dict[str, Any]: The parsed arguments
+            dict[str, JsonValue]: The parsed arguments
 
         Raises:
             ValueError: If the arguments are not a JSON object
         """
-        parsed = json.loads(arguments)
-        if not isinstance(parsed, dict):
-            raise ValueError("Tool arguments must be a JSON object")
-        return parsed
+        return open_ai_models.as_json_object(json.loads(arguments))
 
-    def call_function(self, function_name: str, **kwargs: Any) -> str:
+    def call_function(self, function_name: str, **kwargs: open_ai_models.JsonValue) -> str:
         """Call a function
 
         Args:
@@ -104,9 +104,13 @@ class ToolManager:
             return f"Tool {function_name} does not exist, please answer the last question again."
 
         try:
-            return self._tools[function_name].function(**kwargs)
+            result = self._tools[function_name].function(**kwargs)
         except Exception as exc:
             return f"Tool {function_name} failed: {exc}"
+
+        if isinstance(result, str):
+            return result
+        return f"Tool {function_name} failed: expected a string result"
 
     def call_function_from_arguments(
         self, function_name: str, arguments: str
@@ -130,7 +134,9 @@ class ToolManager:
 
         return self.call_function(function_name, **parsed_arguments)
 
-    async def async_call_function(self, function_name: str, **kwargs: Any) -> str:
+    async def async_call_function(
+        self, function_name: str, **kwargs: open_ai_models.JsonValue
+    ) -> str:
         """Call a function
 
         Args:
@@ -146,7 +152,10 @@ class ToolManager:
             return f"Function {function_name} does not exist, please answer the last question again."
 
         try:
-            return await self._tools[function_name].function(**kwargs)
+            result = self._tools[function_name].function(**kwargs)
+            if isinstance(result, str):
+                return result
+            return await result
         except Exception as exc:
             return f"Tool {function_name} failed: {exc}"
 

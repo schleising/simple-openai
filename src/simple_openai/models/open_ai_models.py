@@ -10,7 +10,8 @@ The models are based on the [OpenAI API documentation](https://platform.openai.c
 from __future__ import annotations
 
 from collections import deque
-from typing import Any
+from collections.abc import Mapping, Sequence
+from typing import TypeAlias
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -21,6 +22,9 @@ from simple_openai.constants import (
     MESSAGE_TYPE,
     REASONING_INCLUDE,
 )
+
+JsonScalar: TypeAlias = str | int | float | bool | None
+JsonValue: TypeAlias = JsonScalar | list["JsonValue"] | dict[str, "JsonValue"]
 
 
 class OpenAIParameter(BaseModel):
@@ -34,8 +38,8 @@ class OpenAIParameter(BaseModel):
         properties (dict[str, OpenAIParameter] | None): Nested object properties
         required (list[str] | None): Required nested properties
         items (OpenAIParameter | None): Array item schema
-        enum (list[Any] | None): Enum values for constrained fields
-        default (Any | None): Default value for the parameter
+        enum (list[JsonScalar] | None): Enum values for constrained fields
+        default (JsonScalar | None): Default value for the parameter
         pattern (str | None): Regex pattern for string values
         minimum (int | float | None): Minimum numeric value
         maximum (int | float | None): Maximum numeric value
@@ -49,8 +53,8 @@ class OpenAIParameter(BaseModel):
     properties: dict[str, OpenAIParameter] | None = None
     required: list[str] | None = None
     items: OpenAIParameter | None = None
-    enum: list[Any] | None = None
-    default: Any | None = None
+    enum: list[JsonScalar] | None = None
+    default: JsonScalar | None = None
     pattern: str | None = None
     minimum: int | float | None = None
     maximum: int | float | None = None
@@ -152,6 +156,15 @@ class ChatMessage(BaseModel):
     name: str = "Botto"
 
 
+class ContentPart(BaseModel):
+    """A typed text part inside a Responses message"""
+
+    model_config = ConfigDict(extra="allow")
+
+    type: str
+    text: str | None = None
+
+
 class InputItem(BaseModel):
     """A Responses input or output item
 
@@ -165,7 +178,7 @@ class InputItem(BaseModel):
 
     type: str | None = None
     role: str | None = None
-    content: Any = None
+    content: str | list[ContentPart] | None = None
     name: str | None = None
     call_id: str | None = None
     arguments: str | None = None
@@ -193,47 +206,33 @@ class InputItem(BaseModel):
         if isinstance(content, str):
             return content
         if isinstance(content, list):
-            parts: list[str] = []
-            for part in content:
-                if isinstance(part, dict):
-                    if part.get("type") in {"output_text", "input_text", "text"}:
-                        text = part.get("text")
-                        if isinstance(text, str):
-                            parts.append(text)
-                elif isinstance(part, BaseModel):
-                    text = getattr(part, "text", None)
-                    if isinstance(text, str):
-                        parts.append(text)
+            parts = [part.text for part in content if part.text]
             return "".join(parts) if parts else None
         return None
 
-    def to_api_payload(self) -> dict[str, Any]:
-        """Dump this item for a Responses `input` array"""
-        payload = self.model_dump(exclude_none=True, exclude={"speaker"})
+    def to_api_item(self) -> InputItem:
+        """Return a copy of this item suitable for a Responses `input` array"""
         if self.type in {None, MESSAGE_TYPE} and self.role == "user":
             content = self.content
             if self.speaker and isinstance(content, str):
                 content = f"{self.speaker}: {content}"
-            return {
-                "type": MESSAGE_TYPE,
-                "role": "user",
-                "content": content,
-            }
+            return InputItem(type=MESSAGE_TYPE, role="user", content=content)
         if self.type == FUNCTION_CALL_OUTPUT_TYPE:
-            return {
-                "type": FUNCTION_CALL_OUTPUT_TYPE,
-                "call_id": self.call_id,
-                "output": self.output or "",
-            }
-        payload.setdefault("type", self.type or MESSAGE_TYPE)
-        return payload
+            return InputItem(
+                type=FUNCTION_CALL_OUTPUT_TYPE,
+                call_id=self.call_id,
+                output=self.output or "",
+            )
+        return InputItem.model_validate(
+            self.model_dump(exclude_none=True, exclude={"speaker"})
+        )
 
 
 class ChatContext(BaseModel):
     """Instructions and input items for the next Responses request"""
 
     instructions: str
-    input: list[dict[str, Any]]
+    input: list[InputItem]
 
 
 class ChatHistory(BaseModel):
@@ -241,16 +240,22 @@ class ChatHistory(BaseModel):
 
     @field_validator("messages", mode="before")
     @classmethod
-    def convert_legacy_messages(cls, value: Any) -> Any:
+    def convert_legacy_messages(
+        cls, value: object
+    ) -> dict[str, list[InputItem]] | object:
         if not isinstance(value, dict):
             return value
 
         converted: dict[str, list[InputItem]] = {}
         for chat_id, items in value.items():
+            if not isinstance(items, (list, tuple, deque)):
+                raise TypeError(
+                    f"Chat history for {chat_id!r} must be a sequence of items"
+                )
             converted_items: list[InputItem] = []
             for item in items:
                 converted_items.extend(coerce_history_item(item))
-            converted[chat_id] = converted_items
+            converted[str(chat_id)] = converted_items
         return converted
 
     @field_validator("messages", mode="after")
@@ -265,7 +270,7 @@ class ResponsesRequest(BaseModel):
     """Request body for `POST /v1/responses`"""
 
     model: str = "gpt-5.6-sol"
-    input: list[dict[str, Any]]
+    input: list[InputItem]
     instructions: str | None = None
     tools: list[ResponsesFunctionTool] | None = None
     tool_choice: str | None = None
@@ -328,7 +333,31 @@ class ErrorResponse(BaseModel):
     error: Error
 
 
-def coerce_history_item(item: Any) -> list[InputItem]:
+def as_json_value(value: object) -> JsonValue:
+    """Convert a parsed JSON value into a typed JSON value"""
+    if value is None or isinstance(value, str):
+        return value
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float):
+        return value
+    if isinstance(value, list):
+        return [as_json_value(item) for item in value]
+    if isinstance(value, dict):
+        return {str(key): as_json_value(item) for key, item in value.items()}
+    raise TypeError(f"Unsupported JSON value: {type(value)!r}")
+
+
+def as_json_object(value: object) -> dict[str, JsonValue]:
+    """Convert a parsed JSON object into a typed JSON object"""
+    if not isinstance(value, dict):
+        raise ValueError("Tool arguments must be a JSON object")
+    return {str(key): as_json_value(item) for key, item in value.items()}
+
+
+def coerce_history_item(item: object) -> list[InputItem]:
     """Convert a stored history value into Responses input items
 
     Older `chat_history.json` files used Chat Completions messages. Those are
@@ -351,15 +380,15 @@ def coerce_history_item(item: Any) -> list[InputItem]:
         return _legacy_message_to_items(item)
 
     if isinstance(item, BaseModel):
-        item = item.model_dump(exclude_none=True)
+        return coerce_history_item(item.model_dump(exclude_none=True))
 
     if not isinstance(item, dict):
         raise TypeError(f"Unsupported chat history item: {type(item)!r}")
 
-    if _is_legacy_completions_dict(item):
-        return _legacy_message_to_items(ChatMessage.model_validate(item))
+    payload: dict[str, object] = {str(key): value for key, value in item.items()}
+    if _is_legacy_completions_dict(payload):
+        return _legacy_message_to_items(ChatMessage.model_validate(payload))
 
-    payload = dict(item)
     if "speaker" not in payload and payload.get("role") == "user":
         name = payload.get("name")
         if isinstance(name, str):
@@ -371,16 +400,19 @@ def _is_legacy_completions_item(item: InputItem) -> bool:
     return item.type is None and item.role in {"user", "assistant", "tool", "system"}
 
 
-def _is_legacy_completions_dict(item: dict[str, Any]) -> bool:
-    if item.get("type"):
+def _is_legacy_completions_dict(item: Mapping[str, object]) -> bool:
+    item_type = item.get("type")
+    if isinstance(item_type, str) and item_type:
         return False
     return item.get("role") in {"user", "assistant", "tool", "system"}
 
 
 def _legacy_tool_calls(item: InputItem) -> list[ToolCall] | None:
-    extra = item.model_extra or {}
+    extra = item.model_extra
+    if extra is None:
+        return None
     tool_calls = extra.get("tool_calls")
-    if not tool_calls:
+    if not isinstance(tool_calls, Sequence) or isinstance(tool_calls, (str, bytes)):
         return None
     return [ToolCall.model_validate(tool_call) for tool_call in tool_calls]
 

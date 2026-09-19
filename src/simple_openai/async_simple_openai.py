@@ -6,7 +6,7 @@ It is intended for use with asyncio applications.  If you are not using asyncio,
 """
 
 from pathlib import Path
-from typing import Any, Callable
+from collections.abc import Awaitable, Callable
 
 import aiohttp
 
@@ -101,24 +101,26 @@ class AsyncSimpleOpenai:
         self._chat.update_system_message(system_message)
 
     def add_tool(
-        self, tool_definition: open_ai_models.OpenAITool, function: Callable
+        self,
+        tool_definition: open_ai_models.OpenAITool,
+        function: Callable[..., Awaitable[str]],
     ) -> None:
         """Add a tool to the tool manager
 
         Args:
             tool_definition (open_ai_models.OpenAITool): The tool definition
-            function (Callable): The function to call
+            function (Callable[..., Awaitable[str]]): The function to call
         """
         self._tool_manager.add_tool(tool_definition, function)
 
     async def _post_responses(
         self,
         session: aiohttp.ClientSession,
-        request_body: dict[str, Any],
+        request_body: open_ai_models.ResponsesRequest,
     ) -> open_ai_models.ResponsesResult | open_ai_models.ErrorResponse:
         """Send a Responses API request"""
         async with session.post(
-            constants.RESPONSES_URL, json=request_body
+            constants.RESPONSES_URL, json=request_body.model_dump(exclude_none=True)
         ) as response:
             if response.status == 200:
                 return open_ai_models.ResponsesResult.model_validate_json(
@@ -138,7 +140,7 @@ class AsyncSimpleOpenai:
         allow_tool_calls: bool = True,
         add_date_time: bool = False,
         function_arguments: str | None = None,
-        **kwargs,
+        **kwargs: open_ai_models.JsonValue,
     ) -> open_ai_models.ResponsesResult | open_ai_models.ErrorResponse:
         """Get a function response
 

@@ -10,7 +10,6 @@ transcript. OpenAI does not retain the conversation (`store` is false).
 from collections import deque
 from datetime import datetime
 from pathlib import Path
-from typing import Any
 from zoneinfo import ZoneInfo
 
 from .models import open_ai_models
@@ -190,17 +189,16 @@ class ChatManager:
         chat_id: str,
         add_date_time: bool,
         allow_tool_calls: bool,
-    ) -> dict[str, Any]:
+    ) -> open_ai_models.ResponsesRequest:
         """Build a Responses request body from the local transcript"""
         context = self._build_context(chat_id, add_date_time)
-        request = open_ai_models.ResponsesRequest(
+        return open_ai_models.ResponsesRequest(
             instructions=context.instructions,
             input=context.input,
             tools=tools,
             tool_choice=("auto" if allow_tool_calls else "none") if tools else None,
             parallel_tool_calls=False if tools else None,
         )
-        return request.model_dump(exclude_none=True)
 
     def get_chat(self, chat_id: str = DEFAULT_CHAT_ID) -> str:
         """Get the chat
@@ -276,7 +274,7 @@ class ChatManager:
         items = list(self._chat_history.messages.get(chat_id, ()))
         return open_ai_models.ChatContext(
             instructions=instructions,
-            input=[item.to_api_payload() for item in items],
+            input=[item.to_api_item() for item in items],
         )
 
     def _should_close_before(self, items: list[open_ai_models.InputItem]) -> bool:

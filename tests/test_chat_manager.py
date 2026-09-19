@@ -44,7 +44,7 @@ def _assistant_message(content: str) -> open_ai_models.InputItem:
 
 
 def _item_types(context: open_ai_models.ChatContext) -> list[str]:
-    return [str(item.get("type")) for item in context.input]
+    return [item.type or "" for item in context.input]
 
 
 class ChatManagerToolHistoryTests(unittest.TestCase):
@@ -59,9 +59,9 @@ class ChatManagerToolHistoryTests(unittest.TestCase):
             _item_types(context),
             [FUNCTION_CALL_TYPE, FUNCTION_CALL_OUTPUT_TYPE, MESSAGE_TYPE],
         )
-        self.assertEqual(context.input[1]["call_id"], "call_1")
-        self.assertEqual(context.input[1]["output"], INCOMPLETE_TOOL_RESULT)
-        self.assertEqual(context.input[2]["content"], "Stephen: Hello...?")
+        self.assertEqual(context.input[1].call_id, "call_1")
+        self.assertEqual(context.input[1].output, INCOMPLETE_TOOL_RESULT)
+        self.assertEqual(context.input[2].content, "Stephen: Hello...?")
 
     def test_complete_tool_sequence_is_left_alone(self) -> None:
         self.chat.add_item(_function_call("call_1"))
@@ -78,7 +78,7 @@ class ChatManagerToolHistoryTests(unittest.TestCase):
                 MESSAGE_TYPE,
             ],
         )
-        self.assertEqual(context.input[1]["output"], "search results")
+        self.assertEqual(context.input[1].output, "search results")
 
     def test_real_tool_result_can_follow_an_open_function_call(self) -> None:
         self.chat.add_item(_function_call("call_1"))
@@ -88,7 +88,7 @@ class ChatManagerToolHistoryTests(unittest.TestCase):
             _item_types(context),
             [FUNCTION_CALL_TYPE, FUNCTION_CALL_OUTPUT_TYPE],
         )
-        self.assertEqual(context.input[1]["output"], "search results")
+        self.assertEqual(context.input[1].output, "search results")
 
     def test_missing_tool_result_is_inserted_before_later_user_message(self) -> None:
         self.chat.add_item(_function_call("call_1"))
@@ -104,7 +104,7 @@ class ChatManagerToolHistoryTests(unittest.TestCase):
                 MESSAGE_TYPE,
             ],
         )
-        self.assertEqual(context.input[1]["call_id"], "call_1")
+        self.assertEqual(context.input[1].call_id, "call_1")
 
     def test_partial_parallel_tool_results_are_completed(self) -> None:
         self.chat.add_items([_function_call("call_1"), _function_call("call_2")])
@@ -121,9 +121,9 @@ class ChatManagerToolHistoryTests(unittest.TestCase):
                 MESSAGE_TYPE,
             ],
         )
-        self.assertEqual(context.input[2]["call_id"], "call_1")
-        self.assertEqual(context.input[3]["call_id"], "call_2")
-        self.assertEqual(context.input[3]["output"], INCOMPLETE_TOOL_RESULT)
+        self.assertEqual(context.input[2].call_id, "call_1")
+        self.assertEqual(context.input[3].call_id, "call_2")
+        self.assertEqual(context.input[3].output, INCOMPLETE_TOOL_RESULT)
 
     def test_leading_orphaned_tool_results_are_removed(self) -> None:
         short_chat = ChatManager("You are a test assistant.", max_messages=2)
@@ -139,7 +139,7 @@ class ChatManagerToolHistoryTests(unittest.TestCase):
         self.chat.add_item(_assistant_message("In the far north."))
 
         context = self.chat._build_context("default", add_date_time=False)
-        self.assertEqual(context.input[0]["content"], "Steve: Where is Alaska?")
+        self.assertEqual(context.input[0].content, "Steve: Where is Alaska?")
         self.assertEqual(
             self.chat.get_chat(),
             "Steve: Where is Alaska?\nBotto: In the far north.",
@@ -154,11 +154,12 @@ class ChatManagerToolHistoryTests(unittest.TestCase):
             allow_tool_calls=True,
         )
 
-        self.assertEqual(request["instructions"], "You are a test assistant.")
-        self.assertFalse(request["store"])
-        self.assertEqual(request["include"], ["reasoning.encrypted_content"])
-        self.assertNotIn("tools", request)
-        self.assertNotIn("previous_response_id", request)
+        self.assertEqual(request.instructions, "You are a test assistant.")
+        self.assertFalse(request.store)
+        self.assertEqual(request.include, ["reasoning.encrypted_content"])
+        self.assertIsNone(request.tools)
+        dumped = request.model_dump(exclude_none=True)
+        self.assertNotIn("previous_response_id", dumped)
 
     def test_broken_completions_history_is_converted_and_repaired_on_load(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

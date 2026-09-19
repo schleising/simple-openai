@@ -6,7 +6,7 @@ If you wish to use the async version, you should use the [AsyncSimple OpenAI API
 """
 
 from pathlib import Path
-from typing import Any, Callable
+from collections.abc import Callable
 import requests
 
 from . import constants
@@ -98,23 +98,23 @@ class SimpleOpenai:
         self._chat.update_system_message(system_message)
 
     def add_tool(
-        self, tool_definition: open_ai_models.OpenAITool, function: Callable
+        self, tool_definition: open_ai_models.OpenAITool, function: Callable[..., str]
     ) -> None:
         """Add a tool to the tool manager
 
         Args:
             tool_definition (open_ai_models.OpenAITool): The tool definition
-            function (Callable): The function to call
+            function (Callable[..., str]): The function to call
         """
         self._tool_manager.add_tool(tool_definition, function)
 
     def _post_responses(
-        self, request_body: dict[str, Any]
+        self, request_body: open_ai_models.ResponsesRequest
     ) -> open_ai_models.ResponsesResult | open_ai_models.ErrorResponse:
         """Send a Responses API request"""
         response = requests.post(
             constants.FULL_RESPONSES_URL,
-            json=request_body,
+            json=request_body.model_dump(exclude_none=True),
             headers=self._headers,
         )
 
@@ -131,7 +131,7 @@ class SimpleOpenai:
         allow_tool_calls: bool = True,
         add_date_time: bool = False,
         function_arguments: str | None = None,
-        **kwargs,
+        **kwargs: open_ai_models.JsonValue,
     ) -> open_ai_models.ResponsesResult | open_ai_models.ErrorResponse:
         """Get a function response
 
