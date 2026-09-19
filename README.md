@@ -9,7 +9,7 @@ The library provides both synchronous and asynchronous methods for interacting w
 Install using pip:
 
 ```bash
-pip install simple-openai
+pip install git+https://github.com/schleising/simple-openai.git
 ```
 
 ## Usage

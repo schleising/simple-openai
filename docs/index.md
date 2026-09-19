@@ -9,7 +9,7 @@ It provides both [synchronous](simple_openai/simple_openai.md) and [asynchronous
 Install using pip:
 
 ```bash
-pip install simple-openai
+pip install git+https://github.com/schleising/simple-openai.git
 ```
 
 ## Usage
