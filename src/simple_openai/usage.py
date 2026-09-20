@@ -20,11 +20,8 @@ _BOLD = "\033[1m"
 _DIM = "\033[2m"
 _CYAN = "\033[36m"
 _GREEN = "\033[32m"
-_YELLOW = "\033[33m"
+_BLUE = "\033[34m"
 _RED = "\033[31m"
-_BRIGHT_CYAN = "\033[96m"
-_BRIGHT_GREEN = "\033[92m"
-_BRIGHT_YELLOW = "\033[93m"
 
 _COLUMN_GAP = "  "
 
@@ -83,7 +80,7 @@ def format_responses_usage(
     label_width = max(len(label) for label, _value, _kind in rows)
     value_width = max(len(value) for _label, value, _kind in rows)
 
-    lines = [_style("OpenAI usage", _BOLD, _BRIGHT_CYAN)]
+    lines = [_style("OpenAI usage", _BOLD, _CYAN)]
     for label, value, kind in rows:
         padded_label = label.ljust(label_width)
         padded_value = value.rjust(value_width)
@@ -142,9 +139,9 @@ def _style(text: str, *codes: str) -> str:
 
 def _value_style(kind: str) -> tuple[str, ...]:
     if kind == "cost":
-        return (_BOLD, _BRIGHT_GREEN)
+        return (_BOLD, _GREEN)
     if kind == "tokens":
-        return (_BRIGHT_YELLOW,)
+        return (_BLUE,)
     if kind == "alert":
         return (_BOLD, _RED)
-    return (_BOLD,)
+    return (_BLUE,)
