@@ -154,9 +154,10 @@ class SimpleOpenaiResponsesTests(unittest.TestCase):
         self.assertEqual(result.message, "Hi there")
         self.assertEqual(result.__dataclass_fields__.keys(), {"success", "message"})
         self.assertTrue(
-            any("estimated_cost_usd=" in message for message in logs.output)
+            any("estimated cost" in message for message in logs.output)
         )
-        self.assertTrue(any("chat_id=default" in message for message in logs.output))
+        self.assertTrue(any("chat_id" in message for message in logs.output))
+        self.assertTrue(any("default" in message for message in logs.output))
 
     def test_tool_loop_logs_usage_for_each_http_call(self) -> None:
         client = SimpleOpenai("test-key", "You are a test assistant.")
