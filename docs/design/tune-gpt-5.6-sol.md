@@ -4,8 +4,8 @@ This document is a decision record for the knobs that change how
 `gpt-5.6-sol` behaves in `simple-openai`, and what that does to replies,
 latency, and spend.
 
-Decisions below are **agreed** and implemented. The “today” section is the
-v6.1.0 baseline this work replaced.
+Decisions below are **agreed** and implemented. The baseline section is
+v6.1.0, which this work replaced.
 
 Prices below are OpenAI’s published **gpt-5.6-sol** rates as of 20 Sep 2026
 (promotional pricing at least through 21 Nov 2026). They are per million
@@ -22,20 +22,20 @@ tokens. Reasoning tokens are billed as **output**.
 
 ## Why this exists
 
-v6.1.0 already does three cost-relevant things:
+v6.1.0 already did three cost-relevant things:
 
 - `store: false` (local `chat_history.json`, nothing retained by OpenAI).
 - `reasoning.effort: none`.
 - Reasoning items are pruned and never resent.
 
-The library still hard-codes almost everything else. The ticks in this
-document are the next defaults: Sol stays the default model but callers
-can override it; effort moves to `low`; output is capped at 4096; date
-and time move onto the user message so `instructions` stay cacheable;
-`usage` is logged. History, tool-loop cap, verbosity, and prompt-cache
-key stay as they are.
+Almost everything else was still hard-coded. The ticks in this document
+are the defaults that replaced that baseline: Sol stays the default model
+but callers can override it; effort moves to `low`; output is capped at
+4096; date and time move onto the user message so `instructions` stay
+cacheable; `usage` is logged. History, tool-loop cap, verbosity, and
+prompt-cache key stay as they are.
 
-## What the library sends today
+## What v6.1.0 sent (replaced)
 
 ```mermaid
 flowchart TB
@@ -67,20 +67,20 @@ flowchart TB
 
 
 
-Not sent today: `reasoning.mode`, `text.verbosity`, `max_output_tokens`,
-`prompt_cache_key`, `temperature`.
+Not sent in that baseline: `reasoning.mode`, `text.verbosity`,
+`max_output_tokens`, `prompt_cache_key`, `temperature`.
 
 `temperature` is rejected on this model. Do not add it.
 
-`get_chat_response(..., add_date_time=True)` prepends a fresh timestamp to
-`instructions`. That is cheap in tokens and expensive in cache: the prefix
-changes every call, so prompt-cache hits drop.
+In that baseline, `get_chat_response(..., add_date_time=True)` prepended a
+fresh timestamp to `instructions`. That is cheap in tokens and expensive in
+cache: the prefix changes every call, so prompt-cache hits drop.
 
 `SimpleOpenaiResponse` only returns `success` and `message`. The API’s
-`usage` object is in the JSON today (`ResponsesResult` allows extra fields)
-and is then thrown away.
+`usage` object was already in the JSON (`ResponsesResult` allows extra
+fields) and was then thrown away.
 
-## What we will send (agreed)
+## What the library sends now
 
 ```mermaid
 flowchart TB
@@ -364,7 +364,7 @@ cost =
 `output_tokens` already includes `reasoning_tokens`. Do not add reasoning
 again.
 
-This library currently ignores `usage`. That is the gap. There is no
+The library used to ignore `usage`. That was the gap. There is no
 separate “realtime billing API” that is faster than this object.
 
 Project **budget limits / monthly spend caps** in the OpenAI dashboard can

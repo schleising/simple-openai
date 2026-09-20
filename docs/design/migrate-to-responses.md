@@ -3,27 +3,51 @@
 This document is a decision record for moving `simple-openai` from
 `POST /v1/chat/completions` to `POST /v1/responses`.
 
-Nothing here is decided. Tick one box in each decision section. Leave
-unwanted options unchecked.
+**Status: implemented in 6.0.** Chat Completions is no longer used. The
+questionnaire below is the original options list. What shipped is in
+[Outcome](#outcome).
 
-## Why this exists
+## Outcome
 
-The library is a thin wrapper around Chat Completions:
+Shipped as Responses-only in 6.0, then tuned in the
+[gpt-5.6-sol design](tune-gpt-5.6-sol.md).
 
-- `SimpleOpenai` / `AsyncSimpleOpenai` send a full `messages` array every turn.
-- `ChatManager` stores that array per `chat_id` in `chat_history.json`, caps it
-  at 21 messages, and prepends the system prompt.
-- `ToolManager` runs local Python functions and writes `role: tool` results
+1. **Migrate.** Completions is unsupported. Same public class names.
+2. **State: Option A.** Local Responses item list only. `store` is `false`.
+   No `previous_response_id` or Conversations API.
+3. **Disk.** `chat_history.json` is a per-`chat_id` deque of Responses
+   items (max 21). Older Completions files are converted on load.
+4. **Public API.** `system_message` maps to `instructions` and is resent
+   every turn. The speaker `name` is local metadata (`speaker`) and is
+   folded into user text as `"{name}: {prompt}"` for the API.
+5. **Tools.** Local `ToolManager` functions only. `strict` is `false`.
+   The local `max_tool_calls` loop is kept.
+6. **Images.** `get_image_url` stays on `/v1/images/generations`.
+7. **Rollout.** Major version 6.0, no dual-transport flag. Unit tests with
+   fixtures; no required live tests.
+
+Defaults that followed later: model `gpt-5.6-sol`, `reasoning.effort: low`,
+`max_output_tokens: 4096`, date/time on the user message, usage logging.
+Group chats remain one local history per `chat_id`. `clear_chat` only
+clears local history.
+
+## Why this existed
+
+Before 6.0 the library was a thin wrapper around Chat Completions:
+
+- `SimpleOpenai` / `AsyncSimpleOpenai` sent a full `messages` array every turn.
+- `ChatManager` stored that array per `chat_id` in `chat_history.json`, capped
+  it at 21 messages, and prepended the system prompt.
+- `ToolManager` ran local Python functions and wrote `role: tool` results
   back into that history.
-- `get_image_url` is a separate call to `/v1/images/generations` (DALL·E 3).
+- `get_image_url` was a separate call to `/v1/images/generations` (DALL·E 3).
 
-Chat Completions is still supported. Responses is the current OpenAI surface
-for new agent and tool work. The recent tool-call history bug showed why
-Completions is brittle: an unanswered `tool_calls` message poisons every later
-turn. Responses can take some of that bookkeeping, but it is not a drop-in
-swap.
+Chat Completions was still supported. Responses is the current OpenAI surface
+for new agent and tool work. The tool-call history bug showed why Completions
+is brittle: an unanswered `tool_calls` message poisons every later turn.
+Responses can take some of that bookkeeping, but it is not a drop-in swap.
 
-## Current Completions flow
+## Current Completions flow (pre-6.0)
 
 ```mermaid
 sequenceDiagram
@@ -402,30 +426,35 @@ flowchart TB
 Write answers here once the boxes are chosen:
 
 - Default model id for Responses (today Completions defaults to `gpt-5.5`):
+  `gpt-5.6-sol`
 - `store` default (`true` is required for `previous_response_id` chaining):
+  `false`
 - Do group chats share one conversation id or one per `chat_id`? (today: per `chat_id`)
+  Per `chat_id`, local only
 - Retention / deletion when someone calls `clear_chat` — delete the OpenAI
   conversation too?
+  Local only; nothing is stored at OpenAI
 - Timezone / `add_date_time`: still prefix `instructions`, or a hidden
   context item?
+  Prefix the latest user message so `instructions` stay cacheable
 
 ## Decision summary
 
 Copy this block into a PR or issue when filled in:
 
 ```text
-1. Migrate:            [ ]
-2. State:              [ ] A  [ ] B  [ ] C  [ ] D
-   Fallback:           [ ]
-3. Disk:               [ ]
-   Old files:          [ ]
-4. Public API:         [ ]
-   instructions:       [ ]
-   user name:          [ ]
-5. Tools:              [ ]
-   strict:             [ ]
-   max_tool_calls:     [ ]
-6. Images:             [ ]
-7. Rollout:            [ ]
-   Tests:              [ ]
+1. Migrate:            Responses only
+2. State:              A (local items, store: false)
+   Fallback:           n/a
+3. Disk:               Responses item list as model context
+   Old files:          convert Completions messages on load
+4. Public API:         same class and method names
+   instructions:       system_message mapped internally
+   user name:          fold into text; speaker is local
+5. Tools:              local ToolManager only
+   strict:             false
+   max_tool_calls:     keep local loop
+6. Images:             /v1/images/generations
+7. Rollout:            6.0, no dual-transport flag
+   Tests:              unit tests / fixtures
 ```

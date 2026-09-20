@@ -1,8 +1,12 @@
 # simple-openai
 
-This is a simple wrapper around the OpenAI API.  It's not meant to be a full-featured library, but rather a simple way to get started with the API.
+This is a thin wrapper around the OpenAI API. Chat uses
+[`POST /v1/responses`](https://platform.openai.com/docs/api-reference/responses).
+Images still use [`POST /v1/images/generations`](https://platform.openai.com/docs/api-reference/images)
+(DALL·E 3).
 
-The library provides both synchronous and asynchronous methods for interacting with the API.
+The library provides both synchronous and asynchronous clients. The default
+chat model is `gpt-5.6-sol`.
 
 ## Installation
 
@@ -14,98 +18,180 @@ pip install git+https://github.com/schleising/simple-openai.git
 
 ## Usage
 
-### Calling the API
+### Chat
 
-For the synchronous version, you can use the following code:
+Pass an API key and a system message. The system message is sent as Responses
+`instructions` on every turn. If you pass a `storage_path`, chat history is
+written to `chat_history.json` in that directory.
 
-    from simple_openai import SimpleOpenai
+```python
+from pathlib import Path
 
-    def main():
-        # Initialise a storage location
-        storage_location = Path("/path/to/storage")
+from simple_openai import SimpleOpenai
 
-        # Create a system message
-        system_message = "You are a helpful chatbot. You are very friendly and helpful. You are a good friend to have."
+def main():
+    storage_location = Path("/path/to/storage")
+    system_message = (
+        "You are a helpful chatbot. You are very friendly and helpful. "
+        "You are a good friend to have."
+    )
 
-        # Create the client
-        client = SimpleOpenai(api_key, system_message, storage_location)
+    client = SimpleOpenai(
+        api_key,
+        system_message,
+        storage_location,
+        timezone="Europe/London",
+    )
 
-        # Create tasks for the chat response and the image response
-        result = client.get_chat_response("Hello, how are you?", name="Bob", chat_id="Group 1")
+    result = client.get_chat_response(
+        "Hello, how are you?",
+        name="Bob",
+        chat_id="Group 1",
+    )
 
-        # Print the result
+    if result.success:
+        print(f"Success: {result.message}")
+    else:
+        print(f"Error: {result.message}")
+
+    result = client.get_image_url("A cat")
+
+    if result.success:
+        print(f"Success: {result.message}")
+    else:
+        print(f"Error: {result.message}")
+
+if __name__ == "__main__":
+    main()
+```
+
+For the asynchronous version:
+
+```python
+import asyncio
+from pathlib import Path
+
+from simple_openai import AsyncSimpleOpenai
+
+async def main():
+    storage_location = Path("/path/to/storage")
+    system_message = (
+        "You are a helpful chatbot. You are very friendly and helpful. "
+        "You are a good friend to have."
+    )
+
+    client = AsyncSimpleOpenai(
+        api_key,
+        system_message,
+        storage_location,
+        timezone="Europe/London",
+    )
+
+    tasks = [
+        client.get_chat_response(
+            "Hello, how are you?",
+            name="Bob",
+            chat_id="Group 1",
+        ),
+        client.get_image_url("A cat"),
+    ]
+
+    for task in asyncio.as_completed(tasks):
+        result = await task
+
         if result.success:
-            # Print the message
-            print(f'Success: {result.message}')
+            print(f"Success: {result.message}")
         else:
-            # Print the error
-            print(f'Error: {result.message}')
+            print(f"Error: {result.message}")
 
-        result = client.get_image_url("A cat")
+if __name__ == "__main__":
+    asyncio.run(main())
+```
 
-        # Print the result
-        if result.success:
-            # Print the message
-            print(f'Success: {result.message}')
-        else:
-            # Print the error
-            print(f'Error: {result.message}')
+`get_chat_response` continues a local transcript for `chat_id` (default
+`"default"`). Optional arguments:
 
-    if __name__ == "__main__":
-        # Run the main function
-        main()
+- `max_tool_calls` — how many tool rounds to allow for this turn (default `1`)
+- `add_date_time` — prefix the current date and time onto the latest user
+  message, not onto `instructions`, so the system prompt can stay cached
+- `model` — override the client default for this call
 
-For the asynchronous version, you can use the following code:
-
-    from simple_openai import AsyncSimpleOpenai
-    import asyncio
-
-    async def main():
-        # Initialise a storage location
-        storage_location = Path("/path/to/storage")
-
-        # Create a system message
-        system_message = "You are a helpful chatbot. You are very friendly and helpful. You are a good friend to have."
-
-        # Create the client
-        client = AsyncSimpleOpenai(api_key, system_message, storage_location)
-
-        # Create tasks for the chat response and the image response
-        tasks = [
-            client.get_chat_response("Hello, how are you?", name="Bob", chat_id="Group 1"),
-            client.get_image_url("A cat"),
-        ]
-
-        # Wait for the tasks to complete
-        for task in asyncio.as_completed(tasks):
-            # Get the result
-            result = await task
-
-            # Print the result
-            if result.success:
-                # Print the message
-                print(f'Success: {result.message}')
-            else:
-                # Print the error
-                print(f'Error: {result.message}')
-
-    if __name__ == "__main__":
-        # Run the main function
-        asyncio.run(main())
+The speaker `name` is stored locally and sent to the model as
+`"{name}: {prompt}"`.
 
 ### Output
 
-The output of the functions is a [SimpleOpenaiResponse](https://schleising.github.io/simple-openai/simple_openai/responses/#src.simple_openai.responses.SimpleOpenaiResponse) object, which contains the following properties:
+Chat and image methods return a
+[SimpleOpenaiResponse](https://schleising.github.io/simple-openai/simple_openai/responses/#src.simple_openai.responses.SimpleOpenaiResponse):
 
-- `success` - A boolean indicating whether the request was successful or not.
-- `message` - The message returned by the API.
+- `success` — whether the request succeeded
+- `message` — assistant text, image URL, or an error string
 
-### Functions
+Check `success` before using `message`.
 
-Functions can be added to the client using the `add_tool` method. This method takes an [OpenAITool](https://schleising.github.io/simple-openai/simple_openai/public_models/#src.simple_openai.models.open_ai_models.OpenAITool) definition and a Python function.
+### Tools
 
-The Python function should return a string, which is sent back to the model as a `function_call_output` item.
+Register local functions with `add_tool`. Pass an
+[OpenAITool](https://schleising.github.io/simple-openai/simple_openai/public_models/#src.simple_openai.models.open_ai_models.OpenAITool)
+definition and a Python function that returns a `str`. On the async client the
+callback must be awaitable.
+
+The library converts that schema to a Responses function tool. When the model
+emits a `function_call`, the function runs and the string result is sent back
+as a `function_call_output` item.
+
+```python
+from simple_openai.models import open_ai_models
+
+def internet_search(**kwargs: object) -> str:
+    return "search results"
+
+client.add_tool(
+    open_ai_models.OpenAITool(
+        function=open_ai_models.OpenAIFunction(
+            name="internet_search",
+            description="Search the internet",
+            parameters=open_ai_models.OpenAIParameters(properties={}),
+        )
+    ),
+    internet_search,
+)
+```
+
+### Chat history
+
+Each `chat_id` has its own rolling window of up to 21 Responses items. OpenAI
+does not retain the conversation (`store` is `false`). Older Chat Completions
+history files are converted on load.
+
+```python
+print(client.get_chat_history("Group 1"))
+print(client.get_truncated_chat_history("Group 1"))
+client.update_system_message("You are now a pirate.")
+```
+
+`AsyncSimpleOpenai` also has `clear_chat(chat_id)`.
+
+### Models and usage
+
+The client default is `gpt-5.6-sol`. You can change it on the constructor or
+per chat call:
+
+```python
+client = SimpleOpenai(api_key, system_message, model="gpt-5.6-terra")
+result = client.get_chat_response("Hello", name="Bob", model="gpt-5.6-luna")
+```
+
+Each Responses call logs token counts and a short-context Sol USD estimate on
+the `simple_openai.usage` logger. `SimpleOpenaiResponse` still only has
+`success` and `message`.
+
+```python
+import logging
+
+logging.basicConfig(level=logging.INFO)
+```
 
 ## Documentation
 
-The documentation is available on [GitHub](https://schleising.github.io/simple-openai/)
+The documentation is available on [GitHub Pages](https://schleising.github.io/simple-openai/).

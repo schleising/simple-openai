@@ -49,4 +49,5 @@ nav:
     - SimpleOpenaiResponse: simple_openai/responses.md
     - ChatManager: simple_openai/chat_manager.md
     - ToolManager: simple_openai/tool_manager.md
+    - Usage: simple_openai/usage.md
     - Public Models: simple_openai/public_models.md

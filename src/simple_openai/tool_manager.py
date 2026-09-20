@@ -1,6 +1,6 @@
 """This module contains the tool manager.
 
-The tool manager is used to manage the toold that can be called by the bot.
+The tool manager is used to manage the tools that can be called by the bot.
 
 Define a function using the [OpenAITool](public_models.md/#src.simple_openai.models.open_ai_models.OpenAITool) model from models.py and add it to the tool manager using the add_tool method.
 

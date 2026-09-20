@@ -1,8 +1,8 @@
 """Simple OpenAI API wrapper
 
-The is the synchronous version of the Simple OpenAI API wrapper which uses the [`requests`](https://requests.readthedocs.io/en/latest/) library.
+This is the synchronous version of the Simple OpenAI API wrapper which uses the [`requests`](https://requests.readthedocs.io/en/latest/) library.
 
-If you wish to use the async version, you should use the [AsyncSimple OpenAI API wrapper](async_simple_openai.md) instead.
+If you wish to use the async version, you should use the [Async Simple OpenAI API wrapper](async_simple_openai.md) instead.
 """
 
 from pathlib import Path
@@ -153,11 +153,13 @@ class SimpleOpenai:
 
         Args:
             chat_id (str): The ID of the chat
+            tool_call_id (str): The `call_id` from the model's function_call item
             function_name (str): The name of the function
             allow_tool_calls (bool, optional): Whether to allow tool calls. Defaults to True
             add_date_time (bool, optional): Whether to add the date and time to the message. Defaults to False.
             function_arguments (str, optional): The JSON arguments string from OpenAI.
             model (str, optional): Override the client model for this request.
+            **kwargs: Keyword arguments for the tool if `function_arguments` is omitted.
 
         Returns:
             open_ai_models.ResponsesResult | open_ai_models.ErrorResponse: The Responses result or error response

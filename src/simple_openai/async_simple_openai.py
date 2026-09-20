@@ -1,6 +1,6 @@
 """Async Simple OpenAI API wrapper
 
-The is the async version of the Simple OpenAI API wrapper which uses the [`aiohttp`](https://docs.aiohttp.org/en/stable/index.html) library.
+This is the async version of the Simple OpenAI API wrapper which uses the [`aiohttp`](https://docs.aiohttp.org/en/stable/index.html) library.
 
 It is intended for use with asyncio applications.  If you are not using asyncio, you should use the [Simple OpenAI API wrapper](simple_openai.md) instead.
 """
@@ -162,11 +162,13 @@ class AsyncSimpleOpenai:
         Args:
             chat_id (str): The ID of the chat
             session (aiohttp.ClientSession): The aiohttp session
+            tool_call_id (str): The `call_id` from the model's function_call item
             function_name (str): The name of the function
             allow_tool_calls (bool, optional): Whether to allow tool calls. Defaults to True
             add_date_time (bool, optional): Whether to add the date and time to the message. Defaults to False.
             function_arguments (str, optional): The JSON arguments string from OpenAI.
             model (str, optional): Override the client model for this request.
+            **kwargs: Keyword arguments for the tool if `function_arguments` is omitted.
 
         Returns:
             open_ai_models.ResponsesResult | open_ai_models.ErrorResponse: The Responses result or error response
