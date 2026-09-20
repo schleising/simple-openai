@@ -4,8 +4,8 @@ This document is a decision record for the knobs that change how
 `gpt-5.6-sol` behaves in `simple-openai`, and what that does to replies,
 latency, and spend.
 
-Decisions below are **agreed**. Implementation has not landed yet; v6.1.0
-still matches the “today” section.
+Decisions below are **agreed** and implemented. The “today” section is the
+v6.1.0 baseline this work replaced.
 
 Prices below are OpenAI’s published **gpt-5.6-sol** rates as of 20 Sep 2026
 (promotional pricing at least through 21 Nov 2026). They are per million
@@ -389,8 +389,8 @@ flowchart LR
 
 **Testing bar for monitoring:**
 
-- [ ] Unit test: parse a fixture `usage` object and compute the USD estimate.
-- [ ] No live spend tests.
+- [x] Unit test: parse a fixture `usage` object and compute the USD estimate.
+- [x] No live spend tests.
 
 ---
 
@@ -419,8 +419,8 @@ flowchart LR
     fields to `SimpleOpenaiResponse`. No per-chat running total. No
     Costs API poll.
 
-Unit tests for the USD estimate were not ticked; add them if they are
-cheap while wiring the logger.
+Unit tests parse a fixture `usage` object and compute the USD estimate.
+There are no live spend tests.
 
 ## Implementation notes
 
@@ -452,6 +452,6 @@ cheap while wiring the logger.
 8. Tools:              max_tool_calls=1, parallel_tool_calls=false
 9. Prompt cache:       implicit only
 10. Cost monitoring:   parse usage and log each call
-    Tests:             not ticked
+    Tests:             unit-test usage parse and USD estimate; no live spend
 ```
 

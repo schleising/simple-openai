@@ -14,6 +14,7 @@ from zoneinfo import ZoneInfo
 
 from .models import open_ai_models
 from .constants import (
+    DEFAULT_MODEL,
     FUNCTION_CALL_OUTPUT_TYPE,
     FUNCTION_CALL_TYPE,
     MAX_CHAT_HISTORY,
@@ -118,7 +119,7 @@ class ChatManager:
         Args:
             items (list[InputItem]): The items to add to the chat
             chat_id (str, optional): The ID of the chat to add the items to. Defaults to DEFAULT_CHAT_ID.
-            add_date_time (bool, optional): Whether to add the date and time to the instructions. Defaults to False.
+            add_date_time (bool, optional): Whether to add the date and time to the latest user message. Defaults to False.
 
         Returns:
             open_ai_models.ChatContext: The instructions and input for the next request
@@ -192,10 +193,12 @@ class ChatManager:
         chat_id: str,
         add_date_time: bool,
         allow_tool_calls: bool,
+        model: str = DEFAULT_MODEL,
     ) -> open_ai_models.ResponsesRequest:
         """Build a Responses request body from the local transcript"""
         context = self._build_context(chat_id, add_date_time)
         return open_ai_models.ResponsesRequest(
+            model=model,
             instructions=context.instructions,
             input=context.input,
             tools=tools,
@@ -266,23 +269,40 @@ class ChatManager:
         self, chat_id: str, add_date_time: bool
     ) -> open_ai_models.ChatContext:
         """Create instructions and API input from the local transcript"""
-        if add_date_time:
-            instructions = (
-                f"The date and time is {datetime.now(tz=self._timezone).isoformat()} "
-                f"give answers in timezone {self._timezone.key}.\n{self._system_message}"
-            )
-        else:
-            instructions = self._system_message
-
         items = [
             item.to_api_item()
             for item in self._chat_history.messages.get(chat_id, ())
             if not item.is_reasoning()
         ]
+        if add_date_time:
+            items = self._prefix_date_time_on_latest_user_message(items)
         return open_ai_models.ChatContext(
-            instructions=instructions,
+            instructions=self._system_message,
             input=items,
         )
+
+    def _date_time_prefix(self) -> str:
+        """Current date/time line for the latest user message"""
+        return (
+            f"The date and time is {datetime.now(tz=self._timezone).isoformat()} "
+            f"give answers in timezone {self._timezone.key}."
+        )
+
+    def _prefix_date_time_on_latest_user_message(
+        self, items: list[open_ai_models.InputItem]
+    ) -> list[open_ai_models.InputItem]:
+        """Copy the latest user message with a date/time prefix for the API"""
+        prefix = self._date_time_prefix()
+        for index in range(len(items) - 1, -1, -1):
+            item = items[index]
+            if item.type != MESSAGE_TYPE or item.role != "user":
+                continue
+            content = item.content
+            if not isinstance(content, str):
+                break
+            items[index] = item.model_copy(update={"content": f"{prefix}\n{content}"})
+            break
+        return items
 
     def _should_close_before(self, items: list[open_ai_models.InputItem]) -> bool:
         """Whether unanswered function calls should be closed before these items"""

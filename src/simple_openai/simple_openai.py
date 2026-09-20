@@ -14,6 +14,7 @@ from .models import open_ai_models
 from .responses import SimpleOpenaiResponse
 from . import chat_manager
 from . import tool_manager
+from .usage import log_responses_usage
 
 
 class SimpleOpenai:
@@ -30,6 +31,7 @@ class SimpleOpenai:
         system_message (str): The system message to add to the start of the chat
         storage_path (Path, optional): The path to the storage directory. Defaults to None.
         timezone (str, optional): The timezone to use for the chat messages. Defaults to 'UTC'.
+        model (str, optional): The Responses model. Defaults to gpt-5.6-sol.
 
     !!!Example
         ```python
@@ -75,11 +77,13 @@ class SimpleOpenai:
         system_message: str,
         storage_path: Path | None = None,
         timezone: str = "UTC",
+        model: str = constants.DEFAULT_MODEL,
     ) -> None:
-        self._headers = {
+        self._headers: dict[str, str] = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {api_key}",
         }
+        self._model: str = model
 
         # Create the chat manager
         self._chat = chat_manager.ChatManager(
@@ -108,8 +112,17 @@ class SimpleOpenai:
         """
         self._tool_manager.add_tool(tool_definition, function)
 
+    def _resolved_model(self, model: str | None) -> str:
+        """Per-call model, else the client default"""
+        if model is None:
+            return self._model
+        return model
+
     def _post_responses(
-        self, request_body: open_ai_models.ResponsesRequest
+        self,
+        request_body: open_ai_models.ResponsesRequest,
+        *,
+        chat_id: str,
     ) -> open_ai_models.ResponsesResult | open_ai_models.ErrorResponse:
         """Send a Responses API request"""
         response = requests.post(
@@ -119,7 +132,9 @@ class SimpleOpenai:
         )
 
         if response.status_code == requests.codes.OK:
-            return open_ai_models.ResponsesResult.model_validate_json(response.text)
+            result = open_ai_models.ResponsesResult.model_validate_json(response.text)
+            log_responses_usage(result, model=request_body.model, chat_id=chat_id)
+            return result
 
         return open_ai_models.ErrorResponse.model_validate_json(response.text)
 
@@ -131,6 +146,7 @@ class SimpleOpenai:
         allow_tool_calls: bool = True,
         add_date_time: bool = False,
         function_arguments: str | None = None,
+        model: str | None = None,
         **kwargs: open_ai_models.JsonValue,
     ) -> open_ai_models.ResponsesResult | open_ai_models.ErrorResponse:
         """Get a function response
@@ -141,6 +157,7 @@ class SimpleOpenai:
             allow_tool_calls (bool, optional): Whether to allow tool calls. Defaults to True
             add_date_time (bool, optional): Whether to add the date and time to the message. Defaults to False.
             function_arguments (str, optional): The JSON arguments string from OpenAI.
+            model (str, optional): Override the client model for this request.
 
         Returns:
             open_ai_models.ResponsesResult | open_ai_models.ErrorResponse: The Responses result or error response
@@ -172,7 +189,9 @@ class SimpleOpenai:
                 chat_id=chat_id,
                 add_date_time=add_date_time,
                 allow_tool_calls=allow_tool_calls,
-            )
+                model=self._resolved_model(model),
+            ),
+            chat_id=chat_id,
         )
 
     def get_chat_response(
@@ -182,6 +201,7 @@ class SimpleOpenai:
         chat_id: str = constants.DEFAULT_CHAT_ID,
         max_tool_calls: int = 1,
         add_date_time: bool = False,
+        model: str | None = None,
     ) -> SimpleOpenaiResponse:
         """Get a chat response from OpenAI
 
@@ -193,11 +213,13 @@ class SimpleOpenai:
             chat_id (str, optional): The ID of the chat to continue. Defaults to DEFAULT_CHAT_ID.
             max_tool_calls (int, optional): The maximum number of tool calls. Defaults to 1.
             add_date_time (bool, optional): Whether to add the date and time to the message. Defaults to False.
+            model (str, optional): Override the client model for this request.
 
         Returns:
             SimpleOpenaiResponse: The chat response, the value of `success` should be checked before using the value of `message`
 
         """
+        resolved_model = self._resolved_model(model)
         self._chat.add_user_message(
             prompt,
             name=name,
@@ -211,7 +233,9 @@ class SimpleOpenai:
                 chat_id=chat_id,
                 add_date_time=add_date_time,
                 allow_tool_calls=True,
-            )
+                model=resolved_model,
+            ),
+            chat_id=chat_id,
         )
 
         if isinstance(response_body, open_ai_models.ErrorResponse):
@@ -254,6 +278,7 @@ class SimpleOpenai:
                 allow_tool_calls=tool_call_counter < max_tool_calls,
                 add_date_time=add_date_time,
                 function_arguments=last_tool_call.arguments,
+                model=resolved_model,
             )
 
             if isinstance(response_body, open_ai_models.ErrorResponse):

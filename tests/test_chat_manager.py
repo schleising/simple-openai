@@ -1,7 +1,10 @@
 import json
 import tempfile
 import unittest
+from datetime import datetime
 from pathlib import Path
+from unittest.mock import patch
+from zoneinfo import ZoneInfo
 
 from simple_openai.chat_manager import INCOMPLETE_TOOL_RESULT, ChatManager
 from simple_openai.constants import CHAT_HISTORY_FILE, FUNCTION_CALL_OUTPUT_TYPE, FUNCTION_CALL_TYPE, MESSAGE_TYPE
@@ -156,11 +159,15 @@ class ChatManagerToolHistoryTests(unittest.TestCase):
 
         self.assertEqual(request.instructions, "You are a test assistant.")
         self.assertFalse(request.store)
-        self.assertEqual(request.reasoning.effort, "none")
+        self.assertEqual(request.reasoning.effort, "low")
+        self.assertEqual(request.max_output_tokens, 4096)
+        self.assertEqual(request.model, "gpt-5.6-sol")
         self.assertIsNone(request.tools)
         dumped = request.model_dump(exclude_none=True)
         self.assertNotIn("include", dumped)
         self.assertNotIn("previous_response_id", dumped)
+        self.assertNotIn("prompt_cache_key", dumped)
+        self.assertNotIn("text", dumped)
 
     def test_reasoning_items_are_not_sent_to_the_api(self) -> None:
         self.chat.add_user_message("Hello", name="Steve")
@@ -276,6 +283,27 @@ class ChatManagerToolHistoryTests(unittest.TestCase):
                 "call_Yj6AZxSRdNNmju6S1r8Ja7Xy",
             )
             self.assertEqual(messages[2]["output"], INCOMPLETE_TOOL_RESULT)
+
+    def test_date_time_is_prefixed_on_the_latest_user_message_not_instructions(self) -> None:
+        self.chat.add_user_message("Yesterday", name="Steve")
+        self.chat.add_item(_assistant_message("Ok"))
+        self.chat.add_user_message("What day is it?", name="Steve")
+        fixed = datetime(2026, 9, 20, 11, 0, tzinfo=ZoneInfo("UTC"))
+
+        with patch("simple_openai.chat_manager.datetime") as mock_datetime:
+            mock_datetime.now.return_value = fixed
+            context = self.chat._build_context("default", add_date_time=True)
+
+        self.assertEqual(context.instructions, "You are a test assistant.")
+        self.assertEqual(context.input[0].content, "Steve: Yesterday")
+        self.assertEqual(
+            context.input[2].content,
+            "The date and time is 2026-09-20T11:00:00+00:00 give answers in timezone UTC.\nSteve: What day is it?",
+        )
+        self.assertEqual(
+            self.chat.get_chat(),
+            "Steve: Yesterday\nBotto: Ok\nSteve: What day is it?",
+        )
 
 
 if __name__ == "__main__":

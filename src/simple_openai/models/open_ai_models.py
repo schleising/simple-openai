@@ -16,11 +16,13 @@ from typing import TypeAlias
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from simple_openai.constants import (
+    DEFAULT_MODEL,
     FUNCTION_CALL_OUTPUT_TYPE,
     FUNCTION_CALL_TYPE,
     MAX_CHAT_HISTORY,
+    MAX_OUTPUT_TOKENS,
     MESSAGE_TYPE,
-    REASONING_EFFORT_NONE,
+    REASONING_EFFORT_LOW,
     REASONING_TYPE,
 )
 
@@ -274,13 +276,13 @@ class ChatHistory(BaseModel):
 class ReasoningConfig(BaseModel):
     """Reasoning settings for the Responses API"""
 
-    effort: str = REASONING_EFFORT_NONE
+    effort: str = REASONING_EFFORT_LOW
 
 
 class ResponsesRequest(BaseModel):
     """Request body for `POST /v1/responses`"""
 
-    model: str = "gpt-5.6-sol"
+    model: str = DEFAULT_MODEL
     input: list[InputItem]
     instructions: str | None = None
     tools: list[ResponsesFunctionTool] | None = None
@@ -288,6 +290,49 @@ class ResponsesRequest(BaseModel):
     parallel_tool_calls: bool | None = None
     store: bool = False
     reasoning: ReasoningConfig = Field(default_factory=ReasoningConfig)
+    max_output_tokens: int = MAX_OUTPUT_TOKENS
+
+
+class InputTokensDetails(BaseModel):
+    """Input-token breakdown from a Responses `usage` object"""
+
+    model_config = ConfigDict(extra="allow")
+
+    cached_tokens: int = 0
+
+
+class OutputTokensDetails(BaseModel):
+    """Output-token breakdown from a Responses `usage` object"""
+
+    model_config = ConfigDict(extra="allow")
+
+    reasoning_tokens: int = 0
+
+
+class ResponsesUsage(BaseModel):
+    """Token usage from a Responses API body"""
+
+    model_config = ConfigDict(extra="allow")
+
+    input_tokens: int = 0
+    input_tokens_details: InputTokensDetails | None = None
+    output_tokens: int = 0
+    output_tokens_details: OutputTokensDetails | None = None
+    total_tokens: int = 0
+
+    @property
+    def cached_tokens(self) -> int:
+        """Cached input tokens, or 0 if the API omitted the breakdown"""
+        if self.input_tokens_details is None:
+            return 0
+        return self.input_tokens_details.cached_tokens
+
+    @property
+    def reasoning_tokens(self) -> int:
+        """Reasoning tokens billed as output, or 0 if omitted"""
+        if self.output_tokens_details is None:
+            return 0
+        return self.output_tokens_details.reasoning_tokens
 
 
 class ResponsesResult(BaseModel):
@@ -297,6 +342,7 @@ class ResponsesResult(BaseModel):
 
     id: str
     output: list[InputItem] = []
+    usage: ResponsesUsage | None = None
 
     def function_calls(self) -> list[InputItem]:
         """Function call items from this response"""

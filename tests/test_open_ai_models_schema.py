@@ -84,6 +84,29 @@ class OpenAISchemaModelTests(unittest.TestCase):
         self.assertEqual(result.output_text(), "Hello world")
         self.assertTrue(result.output[0].is_reasoning())
         self.assertEqual(result.function_calls(), [])
+        self.assertIsNone(result.usage)
+
+    def test_usage_is_parsed_from_the_responses_body(self) -> None:
+        result = open_ai_models.ResponsesResult.model_validate(
+            {
+                "id": "resp_123",
+                "output": [],
+                "usage": {
+                    "input_tokens": 75,
+                    "input_tokens_details": {"cached_tokens": 0},
+                    "output_tokens": 1186,
+                    "output_tokens_details": {"reasoning_tokens": 1024},
+                    "total_tokens": 1261,
+                },
+            }
+        )
+
+        self.assertIsNotNone(result.usage)
+        usage = result.usage
+        assert usage is not None
+        self.assertEqual(usage.input_tokens, 75)
+        self.assertEqual(usage.output_tokens, 1186)
+        self.assertEqual(usage.reasoning_tokens, 1024)
 
 
 if __name__ == "__main__":
