@@ -6,6 +6,7 @@ import logging
 import os
 
 from .constants import (
+    SOL_CACHE_WRITE_USD_PER_MILLION,
     SOL_CACHED_INPUT_USD_PER_MILLION,
     SOL_INPUT_USD_PER_MILLION,
     SOL_OUTPUT_USD_PER_MILLION,
@@ -32,16 +33,19 @@ def estimate_sol_short_context_usd(
     input_tokens: int,
     cached_tokens: int,
     output_tokens: int,
+    cache_write_tokens: int = 0,
 ) -> float:
     """Estimate USD using gpt-5.6-sol short-context published rates.
 
     `output_tokens` already includes reasoning tokens. Do not add reasoning
-    again.
+    again. `cached_tokens` and `cache_write_tokens` are portions of
+    `input_tokens`, not extra.
     """
-    uncached_input = max(input_tokens - cached_tokens, 0)
+    uncached_input = max(input_tokens - cached_tokens - cache_write_tokens, 0)
     return (
         uncached_input * SOL_INPUT_USD_PER_MILLION / 1_000_000
         + cached_tokens * SOL_CACHED_INPUT_USD_PER_MILLION / 1_000_000
+        + cache_write_tokens * SOL_CACHE_WRITE_USD_PER_MILLION / 1_000_000
         + output_tokens * SOL_OUTPUT_USD_PER_MILLION / 1_000_000
     )
 
@@ -52,6 +56,7 @@ def format_responses_usage(
     chat_id: str,
     input_tokens: int | None = None,
     cached_tokens: int | None = None,
+    cache_write_tokens: int | None = None,
     output_tokens: int | None = None,
     reasoning_tokens: int | None = None,
     estimated_cost_usd: float | None = None,
@@ -68,6 +73,7 @@ def format_responses_usage(
             [
                 ("input tokens", f"{input_tokens:,}", "tokens"),
                 ("cached tokens", f"{cached_tokens or 0:,}", "tokens"),
+                ("cache write tokens", f"{cache_write_tokens or 0:,}", "tokens"),
                 ("output tokens", f"{output_tokens or 0:,}", "tokens"),
                 ("reasoning tokens", f"{reasoning_tokens or 0:,}", "tokens"),
                 ("estimated cost", f"${estimated_cost_usd or 0:.6f}", "cost"),
@@ -106,6 +112,7 @@ def log_responses_usage(
         usage.input_tokens,
         usage.cached_tokens,
         usage.output_tokens,
+        usage.cache_write_tokens,
     )
     LOGGER.info(
         format_responses_usage(
@@ -113,6 +120,7 @@ def log_responses_usage(
             chat_id=chat_id,
             input_tokens=usage.input_tokens,
             cached_tokens=usage.cached_tokens,
+            cache_write_tokens=usage.cache_write_tokens,
             output_tokens=usage.output_tokens,
             reasoning_tokens=usage.reasoning_tokens,
             estimated_cost_usd=estimated_cost_usd,

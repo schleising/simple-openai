@@ -83,7 +83,14 @@ class SimpleOpenaiResponsesTests(unittest.TestCase):
         self.assertEqual(body["max_output_tokens"], 4096)
         self.assertEqual(body["model"], "gpt-5.6-sol")
         self.assertNotIn("include", body)
-        self.assertEqual(body["input"][0]["content"], "Steve: Hello")
+        self.assertEqual(body["input"][0]["role"], "developer")
+        self.assertEqual(
+            body["input"][0]["content"][0]["prompt_cache_breakpoint"]["mode"],
+            "explicit",
+        )
+        self.assertEqual(body["input"][1]["content"], "Steve: Hello")
+        self.assertEqual(body["prompt_cache_options"]["mode"], "explicit")
+        self.assertNotIn("instructions", body)
         self.assertNotIn("previous_response_id", body)
         self.assertNotIn("prompt_cache_key", body)
 
@@ -117,10 +124,12 @@ class SimpleOpenaiResponsesTests(unittest.TestCase):
         item_types = [item["type"] for item in second_body["input"]]
         self.assertEqual(
             item_types,
-            ["message", "function_call", "function_call_output"],
+            ["message", "message", "function_call", "function_call_output"],
         )
-        self.assertEqual(second_body["input"][2]["output"], "search results")
+        self.assertEqual(second_body["input"][0]["role"], "developer")
+        self.assertEqual(second_body["input"][3]["output"], "search results")
         self.assertEqual(second_body["tool_choice"], "none")
+        self.assertEqual(second_body["prompt_cache_options"]["mode"], "explicit")
         self.assertEqual(second_body["reasoning"]["effort"], "low")
         self.assertEqual(second_body["max_output_tokens"], 4096)
         self.assertFalse(second_body["store"])

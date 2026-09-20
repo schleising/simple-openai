@@ -22,6 +22,7 @@ from simple_openai.constants import (
     MAX_CHAT_HISTORY,
     MAX_OUTPUT_TOKENS,
     MESSAGE_TYPE,
+    PROMPT_CACHE_MODE_EXPLICIT,
     REASONING_EFFORT_LOW,
     REASONING_TYPE,
 )
@@ -159,6 +160,18 @@ class ChatMessage(BaseModel):
     name: str = "Botto"
 
 
+class PromptCacheBreakpoint(BaseModel):
+    """Marks the end of a reusable prompt prefix"""
+
+    mode: str = PROMPT_CACHE_MODE_EXPLICIT
+
+
+class PromptCacheOptions(BaseModel):
+    """Top-level prompt cache controls for GPT-5.6 and later"""
+
+    mode: str = PROMPT_CACHE_MODE_EXPLICIT
+
+
 class ContentPart(BaseModel):
     """A typed text part inside a Responses message"""
 
@@ -166,6 +179,7 @@ class ContentPart(BaseModel):
 
     type: str
     text: str | None = None
+    prompt_cache_breakpoint: PromptCacheBreakpoint | None = None
 
 
 class InputItem(BaseModel):
@@ -291,6 +305,7 @@ class ResponsesRequest(BaseModel):
     store: bool = False
     reasoning: ReasoningConfig = Field(default_factory=ReasoningConfig)
     max_output_tokens: int = MAX_OUTPUT_TOKENS
+    prompt_cache_options: PromptCacheOptions = Field(default_factory=PromptCacheOptions)
 
 
 class InputTokensDetails(BaseModel):
@@ -299,6 +314,7 @@ class InputTokensDetails(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     cached_tokens: int = 0
+    cache_write_tokens: int = 0
 
 
 class OutputTokensDetails(BaseModel):
@@ -326,6 +342,13 @@ class ResponsesUsage(BaseModel):
         if self.input_tokens_details is None:
             return 0
         return self.input_tokens_details.cached_tokens
+
+    @property
+    def cache_write_tokens(self) -> int:
+        """Input tokens written to the prompt cache, or 0 if omitted"""
+        if self.input_tokens_details is None:
+            return 0
+        return self.input_tokens_details.cache_write_tokens
 
     @property
     def reasoning_tokens(self) -> int:

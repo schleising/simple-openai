@@ -107,6 +107,7 @@ class OpenAISchemaModelTests(unittest.TestCase):
         self.assertEqual(usage.input_tokens, 75)
         self.assertEqual(usage.output_tokens, 1186)
         self.assertEqual(usage.reasoning_tokens, 1024)
+        self.assertEqual(usage.cache_write_tokens, 0)
 
 
 if __name__ == "__main__":

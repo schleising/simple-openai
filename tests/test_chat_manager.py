@@ -148,7 +148,7 @@ class ChatManagerToolHistoryTests(unittest.TestCase):
             "Steve: Where is Alaska?\nBotto: In the far north.",
         )
 
-    def test_request_uses_instructions_and_disables_storage(self) -> None:
+    def test_request_uses_explicit_cache_prefix_and_disables_storage(self) -> None:
         self.chat.add_user_message("Hello", name="Steve")
         request = self.chat.build_request(
             None,
@@ -157,17 +157,33 @@ class ChatManagerToolHistoryTests(unittest.TestCase):
             allow_tool_calls=True,
         )
 
-        self.assertEqual(request.instructions, "You are a test assistant.")
+        self.assertIsNone(request.instructions)
+        self.assertEqual(request.prompt_cache_options.mode, "explicit")
+        self.assertEqual(request.input[0].role, "developer")
+        prefix = request.input[0].content
+        self.assertIsInstance(prefix, list)
+        assert isinstance(prefix, list)
+        self.assertEqual(prefix[0].text, "You are a test assistant.")
+        self.assertIsNotNone(prefix[0].prompt_cache_breakpoint)
+        assert prefix[0].prompt_cache_breakpoint is not None
+        self.assertEqual(prefix[0].prompt_cache_breakpoint.mode, "explicit")
+        self.assertEqual(request.input[1].content, "Steve: Hello")
         self.assertFalse(request.store)
         self.assertEqual(request.reasoning.effort, "low")
         self.assertEqual(request.max_output_tokens, 4096)
         self.assertEqual(request.model, "gpt-5.6-sol")
         self.assertIsNone(request.tools)
         dumped = request.model_dump(exclude_none=True)
+        self.assertNotIn("instructions", dumped)
         self.assertNotIn("include", dumped)
         self.assertNotIn("previous_response_id", dumped)
         self.assertNotIn("prompt_cache_key", dumped)
         self.assertNotIn("text", dumped)
+        self.assertEqual(dumped["prompt_cache_options"]["mode"], "explicit")
+        self.assertEqual(
+            dumped["input"][0]["content"][0]["prompt_cache_breakpoint"]["mode"],
+            "explicit",
+        )
 
     def test_reasoning_items_are_not_sent_to_the_api(self) -> None:
         self.chat.add_user_message("Hello", name="Steve")

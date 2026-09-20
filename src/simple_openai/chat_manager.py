@@ -40,7 +40,7 @@ class ChatManager:
     Older Chat Completions history files are converted to Responses items.
 
     Args:
-        system_message (str): The system message sent as Responses `instructions`
+        system_message (str): The system message sent as a developer prefix with an explicit cache breakpoint
         max_messages (int, optional): The maximum number of items in the chat. Defaults to 21.
         storage_path (Path, optional): The path to the storage directory. Defaults to None.
         timezone (str, optional): The timezone to use for the chat messages. Defaults to 'UTC'.
@@ -199,11 +199,30 @@ class ChatManager:
         context = self._build_context(chat_id, add_date_time)
         return open_ai_models.ResponsesRequest(
             model=model,
-            instructions=context.instructions,
-            input=context.input,
+            input=[self._stable_prefix_item(), *context.input],
             tools=tools,
             tool_choice=("auto" if allow_tool_calls else "none") if tools else None,
             parallel_tool_calls=False if tools else None,
+        )
+
+    def _stable_prefix_item(self) -> open_ai_models.InputItem:
+        """System prompt as a developer message with an explicit cache breakpoint
+
+        Top-level `instructions` cannot hold a breakpoint. GPT-5.6 implicit
+        caching writes through the latest user message, so a rolling history
+        would pay cache-write rates and almost never hit. Explicit mode plus
+        this breakpoint caches only the stable prefix (tools + system text).
+        """
+        return open_ai_models.InputItem(
+            type=MESSAGE_TYPE,
+            role="developer",
+            content=[
+                open_ai_models.ContentPart(
+                    type="input_text",
+                    text=self._system_message,
+                    prompt_cache_breakpoint=open_ai_models.PromptCacheBreakpoint(),
+                )
+            ],
         )
 
     def get_chat(self, chat_id: str = DEFAULT_CHAT_ID) -> str:

@@ -29,11 +29,21 @@ class UsageEstimateTests(unittest.TestCase):
             places=6,
         )
 
+    def test_cache_writes_use_the_write_rate_not_ordinary_input(self) -> None:
+        self.assertAlmostEqual(
+            estimate_sol_short_context_usd(1000, 0, 0, cache_write_tokens=800),
+            0.0048,
+            places=6,
+        )
+
     def test_usage_object_exposes_cached_and_reasoning_tokens(self) -> None:
         usage = open_ai_models.ResponsesUsage.model_validate(
             {
                 "input_tokens": 75,
-                "input_tokens_details": {"cached_tokens": 10},
+                "input_tokens_details": {
+                    "cached_tokens": 10,
+                    "cache_write_tokens": 20,
+                },
                 "output_tokens": 1186,
                 "output_tokens_details": {"reasoning_tokens": 1024},
                 "total_tokens": 1261,
@@ -41,6 +51,7 @@ class UsageEstimateTests(unittest.TestCase):
         )
 
         self.assertEqual(usage.cached_tokens, 10)
+        self.assertEqual(usage.cache_write_tokens, 20)
         self.assertEqual(usage.reasoning_tokens, 1024)
 
 
@@ -53,6 +64,7 @@ class UsageFormatTests(unittest.TestCase):
                 chat_id="default",
                 input_tokens=75,
                 cached_tokens=0,
+                cache_write_tokens=0,
                 output_tokens=1186,
                 reasoning_tokens=1024,
                 estimated_cost_usd=0.02402,
@@ -60,8 +72,9 @@ class UsageFormatTests(unittest.TestCase):
         lines = _plain(block).splitlines()
         self.assertEqual(lines[0], "OpenAI usage")
         data_lines = [line for line in lines if line.startswith("  ") and "rates" not in line]
-        self.assertEqual(len(data_lines), 7)
+        self.assertEqual(len(data_lines), 8)
         self.assertTrue(any("chat_id" in line and "default" in line for line in data_lines))
+        self.assertTrue(any("cache write tokens" in line for line in data_lines))
         self.assertTrue(any("estimated cost" in line and "$0.024020" in line for line in data_lines))
         self.assertEqual(len({len(line.rstrip()) for line in data_lines}), 1)
         self.assertIn("\033[", block)
