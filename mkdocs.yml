@@ -3,6 +3,7 @@ site_description: A simple openai api
 site_author: Stephen Schleising
 
 # Repository
+site_url: https://schleising.github.io/simple-openai/
 repo_name: schleising/simple-openai
 repo_url: https://github.com/schleising/simple-openai
 
