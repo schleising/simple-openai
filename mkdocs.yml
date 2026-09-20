@@ -42,6 +42,7 @@ nav:
   - Home: index.md
   - Design:
     - Migrate to Responses: design/migrate-to-responses.md
+    - Tune gpt-5.6-sol: design/tune-gpt-5.6-sol.md
   - Reference:
     - SimpleOpenai: simple_openai/simple_openai.md
     - AsyncSimpleOpenai: simple_openai/async_simple_openai.md
