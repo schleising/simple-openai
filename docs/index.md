@@ -207,5 +207,5 @@ See [Usage](simple_openai/usage.md) for the estimate helper.
 ## Documentation
 
 The reference section documents the public classes. Design notes cover the
-Responses migration and the earlier gpt-5.6-sol defaults. The client default
-is now `gpt-6.2-sol`.
+[gpt-6.2-sol defaults](design/gpt-6.2-sol.md), the Responses migration, and
+the earlier gpt-5.6-sol defaults.

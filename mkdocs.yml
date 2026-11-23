@@ -41,6 +41,7 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Design:
+    - gpt-6.2-sol: design/gpt-6.2-sol.md
     - Migrate to Responses: design/migrate-to-responses.md
     - Tune gpt-5.6-sol: design/tune-gpt-5.6-sol.md
   - Reference:

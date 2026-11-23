@@ -204,3 +204,4 @@ logging.basicConfig(level=logging.INFO)
 ## Documentation
 
 The documentation is available on [GitHub Pages](https://schleising.github.io/simple-openai/).
+Current defaults are recorded in [gpt-6.2-sol](docs/design/gpt-6.2-sol.md).

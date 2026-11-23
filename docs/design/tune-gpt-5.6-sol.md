@@ -1,5 +1,8 @@
 # Design: tune gpt-5.6-sol for quality and cost
 
+Superseded in v6.4.0 by [gpt-6.2-sol](gpt-6.2-sol.md). The decisions below
+are the v6.2.0 record.
+
 This document is a decision record for the knobs that change how
 `gpt-5.6-sol` behaves in `simple-openai`, and what that does to replies,
 latency, and spend.
