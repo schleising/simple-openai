@@ -18,21 +18,34 @@ class UsageEstimateTests(unittest.TestCase):
         # input 75, cached 0, output 1186 (includes 1024 reasoning)
         self.assertAlmostEqual(
             estimate_sol_short_context_usd(75, 0, 1186),
-            0.02402,
+            0.01201,
             places=6,
         )
 
     def test_cached_input_uses_the_discounted_rate(self) -> None:
         self.assertAlmostEqual(
             estimate_sol_short_context_usd(1000, 800, 100),
-            0.00312,
+            0.00148,
             places=6,
         )
 
     def test_cache_writes_use_the_write_rate_not_ordinary_input(self) -> None:
         self.assertAlmostEqual(
             estimate_sol_short_context_usd(1000, 0, 0, cache_write_tokens=800),
-            0.0048,
+            0.0024,
+            places=6,
+        )
+
+    def test_twelve_hour_cache_writes_use_the_higher_rate(self) -> None:
+        self.assertAlmostEqual(
+            estimate_sol_short_context_usd(
+                1000,
+                0,
+                0,
+                cache_write_tokens=800,
+                cache_write_12h_tokens=300,
+            ),
+            0.00315,
             places=6,
         )
 
@@ -52,7 +65,28 @@ class UsageEstimateTests(unittest.TestCase):
 
         self.assertEqual(usage.cached_tokens, 10)
         self.assertEqual(usage.cache_write_tokens, 20)
+        self.assertEqual(usage.cache_write_12h_tokens, 0)
         self.assertEqual(usage.reasoning_tokens, 1024)
+
+    def test_usage_object_splits_cache_write_retention(self) -> None:
+        usage = open_ai_models.ResponsesUsage.model_validate(
+            {
+                "input_tokens": 1000,
+                "input_tokens_details": {
+                    "cached_tokens": 0,
+                    "cache_write_tokens": 800,
+                    "cache_write_tokens_details": {
+                        "ttl_30m_tokens": 500,
+                        "ttl_12h_tokens": 300,
+                    },
+                },
+                "output_tokens": 0,
+                "total_tokens": 1000,
+            }
+        )
+
+        self.assertEqual(usage.cache_write_tokens, 800)
+        self.assertEqual(usage.cache_write_12h_tokens, 300)
 
 
 class UsageFormatTests(unittest.TestCase):
@@ -60,7 +94,7 @@ class UsageFormatTests(unittest.TestCase):
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("NO_COLOR", None)
             block = format_responses_usage(
-                model="gpt-5.6-sol",
+                model="gpt-6.2-sol",
                 chat_id="default",
                 input_tokens=75,
                 cached_tokens=0,
@@ -82,7 +116,7 @@ class UsageFormatTests(unittest.TestCase):
     def test_no_color_disables_ansi(self) -> None:
         with patch.dict(os.environ, {"NO_COLOR": "1"}, clear=False):
             block = format_responses_usage(
-                model="gpt-5.6-sol",
+                model="gpt-6.2-sol",
                 chat_id="Group 1",
                 input_tokens=10,
                 cached_tokens=2,
@@ -95,7 +129,7 @@ class UsageFormatTests(unittest.TestCase):
         self.assertIn("Group 1", block)
 
     def test_missing_usage_is_flagged_on_its_own_line(self) -> None:
-        block = format_responses_usage(model="gpt-5.6-sol", chat_id="default")
+        block = format_responses_usage(model="gpt-6.2-sol", chat_id="default")
         lines = _plain(block).splitlines()
         self.assertTrue(any(line.strip().endswith("missing") for line in lines))
         self.assertFalse(any("estimated cost" in line for line in lines))

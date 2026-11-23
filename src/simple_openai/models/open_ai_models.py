@@ -23,6 +23,7 @@ from simple_openai.constants import (
     MAX_OUTPUT_TOKENS,
     MESSAGE_TYPE,
     PROMPT_CACHE_MODE_EXPLICIT,
+    PROMPT_CACHE_TTL_30M,
     REASONING_EFFORT_LOW,
     REASONING_TYPE,
 )
@@ -167,9 +168,14 @@ class PromptCacheBreakpoint(BaseModel):
 
 
 class PromptCacheOptions(BaseModel):
-    """Top-level prompt cache controls for GPT-5.6 and later"""
+    """Top-level prompt cache controls for GPT-5.6 and later
+
+    `ttl` is the 30-minute retention the cost log prices. GPT-6.2 bills
+    that retention at 1.25× the uncached input rate.
+    """
 
     mode: str = PROMPT_CACHE_MODE_EXPLICIT
+    ttl: str = PROMPT_CACHE_TTL_30M
 
 
 class ContentPart(BaseModel):
@@ -186,9 +192,12 @@ class InputItem(BaseModel):
     """A Responses input or output item
 
     Unknown fields are kept so extra Responses metadata can round-trip.
-    Reasoning items are not sent back to the API.
+    Reasoning items, including `encrypted_content` from stateless responses,
+    are replayed. GPT-6.2 drops them if earlier input is edited.
 
-    `speaker` is local display metadata and is not sent to OpenAI.
+    `speaker` and `time_prefix` are local metadata and are not sent as their
+    own fields. `time_prefix` is applied once to a user message so a later
+    request replays the same text.
     """
 
     model_config = ConfigDict(extra="allow")
@@ -203,9 +212,10 @@ class InputItem(BaseModel):
     status: str | None = None
     id: str | None = None
     speaker: str | None = None
+    time_prefix: str | None = None
 
     def is_reasoning(self) -> bool:
-        """Whether this item is a reasoning payload that should not be replayed"""
+        """Whether this item is an opaque reasoning payload"""
         return self.type == REASONING_TYPE
 
     def display_name(self) -> str:
@@ -220,7 +230,7 @@ class InputItem(BaseModel):
         """Plain text for the local transcript, if this item has any"""
         if self.type == FUNCTION_CALL_OUTPUT_TYPE:
             return self.output
-        if self.type == FUNCTION_CALL_TYPE:
+        if self.type in {FUNCTION_CALL_TYPE, REASONING_TYPE}:
             return None
 
         content = self.content
@@ -237,6 +247,8 @@ class InputItem(BaseModel):
             content = self.content
             if self.speaker and isinstance(content, str):
                 content = f"{self.speaker}: {content}"
+            if self.time_prefix and isinstance(content, str):
+                content = f"{self.time_prefix}\n{content}"
             return InputItem(type=MESSAGE_TYPE, role="user", content=content)
         if self.type == FUNCTION_CALL_OUTPUT_TYPE:
             return InputItem(
@@ -245,7 +257,7 @@ class InputItem(BaseModel):
                 output=self.output or "",
             )
         return InputItem.model_validate(
-            self.model_dump(exclude_none=True, exclude={"speaker"})
+            self.model_dump(exclude_none=True, exclude={"speaker", "time_prefix"})
         )
 
 
@@ -288,7 +300,11 @@ class ChatHistory(BaseModel):
 
 
 class ReasoningConfig(BaseModel):
-    """Reasoning settings for the Responses API"""
+    """Reasoning settings for the Responses API
+
+    `low` is the cheapest effort gpt-6.2-sol accepts. The API rejects `none`.
+    `context` is omitted so the model uses its own default.
+    """
 
     effort: str = REASONING_EFFORT_LOW
 
@@ -308,6 +324,18 @@ class ResponsesRequest(BaseModel):
     prompt_cache_options: PromptCacheOptions = Field(default_factory=PromptCacheOptions)
 
 
+class CacheWriteTokensDetails(BaseModel):
+    """Cache-write split from a Responses `usage` object
+
+    The two counts do not overlap and sum to `cache_write_tokens`.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    ttl_30m_tokens: int = 0
+    ttl_12h_tokens: int = 0
+
+
 class InputTokensDetails(BaseModel):
     """Input-token breakdown from a Responses `usage` object"""
 
@@ -315,6 +343,7 @@ class InputTokensDetails(BaseModel):
 
     cached_tokens: int = 0
     cache_write_tokens: int = 0
+    cache_write_tokens_details: CacheWriteTokensDetails | None = None
 
 
 class OutputTokensDetails(BaseModel):
@@ -349,6 +378,16 @@ class ResponsesUsage(BaseModel):
         if self.input_tokens_details is None:
             return 0
         return self.input_tokens_details.cache_write_tokens
+
+    @property
+    def cache_write_12h_tokens(self) -> int:
+        """Cache writes billed at the 12-hour rate, or 0 if omitted"""
+        if self.input_tokens_details is None:
+            return 0
+        details = self.input_tokens_details.cache_write_tokens_details
+        if details is None:
+            return 0
+        return details.ttl_12h_tokens
 
     @property
     def reasoning_tokens(self) -> int:

@@ -6,6 +6,7 @@ import logging
 import os
 
 from .constants import (
+    SOL_CACHE_WRITE_12H_USD_PER_MILLION,
     SOL_CACHE_WRITE_USD_PER_MILLION,
     SOL_CACHED_INPUT_USD_PER_MILLION,
     SOL_INPUT_USD_PER_MILLION,
@@ -31,18 +32,24 @@ def estimate_sol_short_context_usd(
     cached_tokens: int,
     output_tokens: int,
     cache_write_tokens: int = 0,
+    cache_write_12h_tokens: int = 0,
 ) -> float:
-    """Estimate USD using gpt-5.6-sol short-context published rates.
+    """Estimate USD using gpt-6.2-sol Standard short-context rates.
 
     `output_tokens` already includes reasoning tokens. Do not add reasoning
     again. `cached_tokens` and `cache_write_tokens` are portions of
-    `input_tokens`, not extra.
+    `input_tokens`, not extra. `cache_write_12h_tokens` is the part of
+    `cache_write_tokens` billed at the 12-hour write rate. The rest of
+    `cache_write_tokens` uses the 30-minute write rate.
     """
+    write_12h = min(max(cache_write_12h_tokens, 0), cache_write_tokens)
+    write_30m = cache_write_tokens - write_12h
     uncached_input = max(input_tokens - cached_tokens - cache_write_tokens, 0)
     return (
         uncached_input * SOL_INPUT_USD_PER_MILLION / 1_000_000
         + cached_tokens * SOL_CACHED_INPUT_USD_PER_MILLION / 1_000_000
-        + cache_write_tokens * SOL_CACHE_WRITE_USD_PER_MILLION / 1_000_000
+        + write_30m * SOL_CACHE_WRITE_USD_PER_MILLION / 1_000_000
+        + write_12h * SOL_CACHE_WRITE_12H_USD_PER_MILLION / 1_000_000
         + output_tokens * SOL_OUTPUT_USD_PER_MILLION / 1_000_000
     )
 
@@ -57,6 +64,7 @@ def format_responses_usage(
     output_tokens: int | None = None,
     reasoning_tokens: int | None = None,
     estimated_cost_usd: float | None = None,
+    cache_write_12h_tokens: int | None = None,
 ) -> str:
     """Build a coloured, column-aligned usage block for container logs."""
     rows: list[tuple[str, str, str]] = [
@@ -71,6 +79,17 @@ def format_responses_usage(
                 ("input tokens", f"{input_tokens:,}", "tokens"),
                 ("cached tokens", f"{cached_tokens or 0:,}", "tokens"),
                 ("cache write tokens", f"{cache_write_tokens or 0:,}", "tokens"),
+                *(
+                    [
+                        (
+                            "12h cache writes",
+                            f"{cache_write_12h_tokens:,}",
+                            "tokens",
+                        )
+                    ]
+                    if cache_write_12h_tokens
+                    else []
+                ),
                 ("output tokens", f"{output_tokens or 0:,}", "tokens"),
                 ("reasoning tokens", f"{reasoning_tokens or 0:,}", "tokens"),
                 ("estimated cost", f"${estimated_cost_usd or 0:.6f}", "cost"),
@@ -89,7 +108,12 @@ def format_responses_usage(
             f"{_style(padded_value, *_value_style(kind))}"
         )
     if input_tokens is not None:
-        lines.append(_style("  gpt-5.6-sol short-context rates", _DIM))
+        rate_note = "gpt-6.2-sol short-context rates, 30-minute cache writes"
+        if cache_write_12h_tokens:
+            rate_note = (
+                "gpt-6.2-sol short-context rates, 30-minute and 12-hour cache writes"
+            )
+        lines.append(_style(f"  {rate_note}", _DIM))
     return "\n".join(lines)
 
 
@@ -99,7 +123,7 @@ def log_responses_usage(
     model: str,
     chat_id: str,
 ) -> None:
-    """Log token counts and a Sol short-context USD estimate for one HTTP call."""
+    """Log token counts and a gpt-6.2-sol short-context USD estimate for one HTTP call."""
     usage = result.usage
     if usage is None:
         LOGGER.info(format_responses_usage(model=model, chat_id=chat_id))
@@ -110,6 +134,7 @@ def log_responses_usage(
         usage.cached_tokens,
         usage.output_tokens,
         usage.cache_write_tokens,
+        usage.cache_write_12h_tokens,
     )
     LOGGER.info(
         format_responses_usage(
@@ -121,6 +146,7 @@ def log_responses_usage(
             output_tokens=usage.output_tokens,
             reasoning_tokens=usage.reasoning_tokens,
             estimated_cost_usd=estimated_cost_usd,
+            cache_write_12h_tokens=usage.cache_write_12h_tokens,
         )
     )
 

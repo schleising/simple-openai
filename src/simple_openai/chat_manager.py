@@ -71,11 +71,10 @@ class ChatManager:
                         f.read()
                     )
 
-                # Drop stored reasoning and close unanswered function calls
+                # Close unanswered function calls. Reasoning items stay so
+                # gpt-6.2-sol can reuse them on the next turn.
                 repaired = False
                 for chat_id in list(self._chat_history.messages):
-                    if self._prune_reasoning(chat_id):
-                        repaired = True
                     if self._repair_chat(chat_id, close_trailing=True):
                         repaired = True
 
@@ -124,7 +123,6 @@ class ChatManager:
         Returns:
             open_ai_models.ChatContext: The instructions and input for the next request
         """
-        items = [item for item in items if not item.is_reasoning()]
         if not items:
             return self._build_context(chat_id, add_date_time)
 
@@ -208,10 +206,11 @@ class ChatManager:
     def _stable_prefix_item(self) -> open_ai_models.InputItem:
         """System prompt as a developer message with an explicit cache breakpoint
 
-        Top-level `instructions` cannot hold a breakpoint. GPT-5.6 implicit
-        caching writes through the latest user message, so a rolling history
-        would pay cache-write rates and almost never hit. Explicit mode plus
-        this breakpoint caches only the stable prefix (tools + system text).
+        GPT-6.2 appends top-level `instructions` after `input` and bills those
+        tokens as uncached input. A developer message at the start of `input`
+        keeps the system text inside the cached prefix. Explicit mode caches
+        only up to this breakpoint, so the rolling history is not rewritten
+        into the cache on every turn.
         """
         return open_ai_models.InputItem(
             type=MESSAGE_TYPE,
@@ -288,13 +287,12 @@ class ChatManager:
         self, chat_id: str, add_date_time: bool
     ) -> open_ai_models.ChatContext:
         """Create instructions and API input from the local transcript"""
+        if add_date_time:
+            self._remember_time_prefix(chat_id)
         items = [
             item.to_api_item()
             for item in self._chat_history.messages.get(chat_id, ())
-            if not item.is_reasoning()
         ]
-        if add_date_time:
-            items = self._prefix_date_time_on_latest_user_message(items)
         return open_ai_models.ChatContext(
             instructions=self._system_message,
             input=items,
@@ -307,46 +305,35 @@ class ChatManager:
             f"give answers in timezone {self._timezone.key}."
         )
 
-    def _prefix_date_time_on_latest_user_message(
-        self, items: list[open_ai_models.InputItem]
-    ) -> list[open_ai_models.InputItem]:
-        """Copy the latest user message with a date/time prefix for the API"""
-        prefix = self._date_time_prefix()
-        for index in range(len(items) - 1, -1, -1):
-            item = items[index]
+    def _remember_time_prefix(self, chat_id: str) -> None:
+        """Store one date/time line on the latest user message
+
+        GPT-6.2 drops reasoning items when earlier input changes. Stamping a
+        fresh timestamp on every request would do that, so the line is saved
+        once and replayed unchanged. It stays out of the local transcript.
+        """
+        messages = self._chat_history.messages.get(chat_id)
+        if not messages:
+            return
+
+        for index in range(len(messages) - 1, -1, -1):
+            item = messages[index]
             if item.type != MESSAGE_TYPE or item.role != "user":
                 continue
-            content = item.content
-            if not isinstance(content, str):
-                break
-            items[index] = item.model_copy(update={"content": f"{prefix}\n{content}"})
-            break
-        return items
+            if item.time_prefix or not isinstance(item.content, str):
+                return
+            messages[index] = item.model_copy(
+                update={"time_prefix": self._date_time_prefix()}
+            )
+            if self._storage_path is not None:
+                self._save_history()
+            return
 
     def _should_close_before(self, items: list[open_ai_models.InputItem]) -> bool:
         """Whether unanswered function calls should be closed before these items"""
         for item in items:
             if item.type in {FUNCTION_CALL_TYPE, FUNCTION_CALL_OUTPUT_TYPE}:
                 return False
-        return True
-
-    def _prune_reasoning(self, chat_id: str) -> bool:
-        """Remove stored reasoning items from a chat
-
-        Returns:
-            bool: True if any reasoning items were removed
-        """
-        if chat_id not in self._chat_history.messages:
-            return False
-
-        current_items = list(self._chat_history.messages[chat_id])
-        kept_items = [item for item in current_items if not item.is_reasoning()]
-        if len(kept_items) == len(current_items):
-            return False
-
-        self._chat_history.messages[chat_id] = deque(
-            kept_items, maxlen=self._max_messages
-        )
         return True
 
     def _pop_orphaned_leading_outputs(self, chat_id: str) -> None:

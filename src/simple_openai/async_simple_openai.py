@@ -32,7 +32,7 @@ class AsyncSimpleOpenai:
         system_message (str): The system message to add to the start of the chat
         storage_path (Path, optional): The path to the storage directory. Defaults to None.
         timezone (str, optional): The timezone to use for the chat messages. Defaults to 'UTC'.
-        model (str, optional): The Responses model. Defaults to gpt-5.6-sol.
+        model (str, optional): The Responses model. Defaults to gpt-6.2-sol.
 
     !!!Example
         ```python

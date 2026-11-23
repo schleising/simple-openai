@@ -171,7 +171,7 @@ class ChatManagerToolHistoryTests(unittest.TestCase):
         self.assertFalse(request.store)
         self.assertEqual(request.reasoning.effort, "low")
         self.assertEqual(request.max_output_tokens, 4096)
-        self.assertEqual(request.model, "gpt-5.6-sol")
+        self.assertEqual(request.model, "gpt-6.2-sol")
         self.assertIsNone(request.tools)
         dumped = request.model_dump(exclude_none=True)
         self.assertNotIn("instructions", dumped)
@@ -180,14 +180,16 @@ class ChatManagerToolHistoryTests(unittest.TestCase):
         self.assertNotIn("prompt_cache_key", dumped)
         self.assertNotIn("text", dumped)
         self.assertEqual(dumped["prompt_cache_options"]["mode"], "explicit")
+        self.assertEqual(dumped["prompt_cache_options"]["ttl"], "30m")
+        self.assertNotIn("context", dumped["reasoning"])
         self.assertEqual(
             dumped["input"][0]["content"][0]["prompt_cache_breakpoint"]["mode"],
             "explicit",
         )
 
-    def test_reasoning_items_are_not_sent_to_the_api(self) -> None:
+    def test_reasoning_items_are_replayed_to_the_api(self) -> None:
         self.chat.add_user_message("Hello", name="Steve")
-        self.chat._chat_history.messages["default"].append(
+        self.chat.add_item(
             open_ai_models.InputItem(
                 type="reasoning",
                 id="rs_1",
@@ -197,10 +199,13 @@ class ChatManagerToolHistoryTests(unittest.TestCase):
         self.chat.add_item(_assistant_message("Hi"))
 
         context = self.chat._build_context("default", add_date_time=False)
-        self.assertEqual(_item_types(context), [MESSAGE_TYPE, MESSAGE_TYPE])
-        self.assertFalse(any(item.is_reasoning() for item in context.input))
+        self.assertEqual(_item_types(context), [MESSAGE_TYPE, "reasoning", MESSAGE_TYPE])
+        reasoning = context.input[1]
+        self.assertEqual(reasoning.id, "rs_1")
+        self.assertEqual(getattr(reasoning, "encrypted_content", None), "encrypted")
+        self.assertNotIn("reasoning", self.chat.get_chat())
 
-    def test_stored_reasoning_items_are_pruned_on_load(self) -> None:
+    def test_stored_reasoning_items_are_kept_on_load(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             storage_path = Path(temp_dir)
             (storage_path / CHAT_HISTORY_FILE).write_text(
@@ -235,12 +240,15 @@ class ChatManagerToolHistoryTests(unittest.TestCase):
             chat = ChatManager("You are a test assistant.", storage_path=storage_path)
             context = chat._build_context("default", add_date_time=False)
 
-            self.assertEqual(_item_types(context), [MESSAGE_TYPE, MESSAGE_TYPE])
+            self.assertEqual(
+                _item_types(context), [MESSAGE_TYPE, "reasoning", MESSAGE_TYPE]
+            )
             saved = json.loads((storage_path / CHAT_HISTORY_FILE).read_text())
             self.assertEqual(
                 [message["type"] for message in saved["messages"]["default"]],
-                [MESSAGE_TYPE, MESSAGE_TYPE],
+                [MESSAGE_TYPE, "reasoning", MESSAGE_TYPE],
             )
+            self.assertEqual(saved["messages"]["default"][1]["encrypted_content"], "encrypted")
 
     def test_broken_completions_history_is_converted_and_repaired_on_load(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -309,17 +317,25 @@ class ChatManagerToolHistoryTests(unittest.TestCase):
         with patch("simple_openai.chat_manager.datetime") as mock_datetime:
             mock_datetime.now.return_value = fixed
             context = self.chat._build_context("default", add_date_time=True)
+            stamped_at = mock_datetime.now.call_count
 
-        self.assertEqual(context.instructions, "You are a test assistant.")
-        self.assertEqual(context.input[0].content, "Steve: Yesterday")
-        self.assertEqual(
-            context.input[2].content,
-            "The date and time is 2026-09-20T11:00:00+00:00 give answers in timezone UTC.\nSteve: What day is it?",
-        )
-        self.assertEqual(
-            self.chat.get_chat(),
-            "Steve: Yesterday\nBotto: Ok\nSteve: What day is it?",
-        )
+            self.assertEqual(context.instructions, "You are a test assistant.")
+            self.assertEqual(context.input[0].content, "Steve: Yesterday")
+            self.assertEqual(
+                context.input[2].content,
+                "The date and time is 2026-09-20T11:00:00+00:00 give answers in timezone UTC.\nSteve: What day is it?",
+            )
+            self.assertEqual(
+                self.chat.get_chat(),
+                "Steve: Yesterday\nBotto: Ok\nSteve: What day is it?",
+            )
+
+            mock_datetime.now.return_value = datetime(
+                2026, 9, 20, 12, 30, tzinfo=ZoneInfo("UTC")
+            )
+            again = self.chat._build_context("default", add_date_time=True)
+            self.assertEqual(again.input[2].content, context.input[2].content)
+            self.assertEqual(mock_datetime.now.call_count, stamped_at)
 
 
 if __name__ == "__main__":
