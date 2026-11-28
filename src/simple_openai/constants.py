@@ -19,6 +19,7 @@ FUNCTION_CALL_OUTPUT_TYPE = "function_call_output"
 MESSAGE_TYPE = "message"
 REASONING_TYPE = "reasoning"
 REASONING_EFFORT_LOW = "low"
+TEXT_VERBOSITY_HIGH = "high"
 
 # gpt-6.2-sol Standard short-context rates (USD per million tokens).
 # Published with GPT-6.2 Sol. Cached input is 0.05× input. A 30-minute

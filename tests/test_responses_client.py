@@ -80,6 +80,8 @@ class SimpleOpenaiResponsesTests(unittest.TestCase):
         self.assertEqual(url, FULL_RESPONSES_URL)
         self.assertFalse(body["store"])
         self.assertEqual(body["reasoning"]["effort"], "low")
+        self.assertEqual(body["text"]["verbosity"], "high")
+        self.assertEqual(body["instructions"], "You are a test assistant.")
         self.assertEqual(body["max_output_tokens"], 4096)
         self.assertEqual(body["model"], "gpt-6.2-sol")
         self.assertEqual(body["prompt_cache_options"]["ttl"], "30m")
@@ -92,7 +94,6 @@ class SimpleOpenaiResponsesTests(unittest.TestCase):
         )
         self.assertEqual(body["input"][1]["content"], "Steve: Hello")
         self.assertEqual(body["prompt_cache_options"]["mode"], "explicit")
-        self.assertNotIn("instructions", body)
         self.assertNotIn("previous_response_id", body)
         self.assertNotIn("prompt_cache_key", body)
 

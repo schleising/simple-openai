@@ -157,7 +157,8 @@ class ChatManagerToolHistoryTests(unittest.TestCase):
             allow_tool_calls=True,
         )
 
-        self.assertIsNone(request.instructions)
+        self.assertEqual(request.instructions, "You are a test assistant.")
+        self.assertEqual(request.text.verbosity, "high")
         self.assertEqual(request.prompt_cache_options.mode, "explicit")
         self.assertEqual(request.input[0].role, "developer")
         prefix = request.input[0].content
@@ -174,11 +175,11 @@ class ChatManagerToolHistoryTests(unittest.TestCase):
         self.assertEqual(request.model, "gpt-6.2-sol")
         self.assertIsNone(request.tools)
         dumped = request.model_dump(exclude_none=True)
-        self.assertNotIn("instructions", dumped)
+        self.assertEqual(dumped["instructions"], "You are a test assistant.")
         self.assertNotIn("include", dumped)
         self.assertNotIn("previous_response_id", dumped)
         self.assertNotIn("prompt_cache_key", dumped)
-        self.assertNotIn("text", dumped)
+        self.assertEqual(dumped["text"], {"verbosity": "high"})
         self.assertEqual(dumped["prompt_cache_options"]["mode"], "explicit")
         self.assertEqual(dumped["prompt_cache_options"]["ttl"], "30m")
         self.assertNotIn("context", dumped["reasoning"])

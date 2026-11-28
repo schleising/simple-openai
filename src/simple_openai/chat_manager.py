@@ -198,6 +198,7 @@ class ChatManager:
         return open_ai_models.ResponsesRequest(
             model=model,
             input=[self._stable_prefix_item(), *context.input],
+            instructions=context.instructions,
             tools=tools,
             tool_choice=("auto" if allow_tool_calls else "none") if tools else None,
             parallel_tool_calls=False if tools else None,
@@ -206,11 +207,11 @@ class ChatManager:
     def _stable_prefix_item(self) -> open_ai_models.InputItem:
         """System prompt as a developer message with an explicit cache breakpoint
 
-        GPT-6.2 appends top-level `instructions` after `input` and bills those
-        tokens as uncached input. A developer message at the start of `input`
-        keeps the system text inside the cached prefix. Explicit mode caches
-        only up to this breakpoint, so the rolling history is not rewritten
-        into the cache on every turn.
+        The same text is also sent as top-level `instructions`. GPT-6.2 appends
+        that field after the conversation and gives it priority over user
+        messages. The developer copy stays at the start so the stable prompt
+        can be cached. Explicit mode caches only up to this breakpoint, so
+        the rolling history is not rewritten into the cache on every turn.
         """
         return open_ai_models.InputItem(
             type=MESSAGE_TYPE,

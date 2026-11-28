@@ -22,11 +22,11 @@ pip install git+https://github.com/schleising/simple-openai.git
 ### Chat
 
 Pass an API key and a system message. The system message is sent as the first
-developer message in `input`, with an explicit prompt-cache breakpoint.
-GPT-6.2 appends top-level `instructions` after the conversation and bills
-them as uncached input, so the library does not use that field. If you pass
-a `storage_path`, chat history is written to `chat_history.json` in that
-directory.
+developer message in `input`, with an explicit prompt-cache breakpoint, and
+again as top-level `instructions`. GPT-6.2 appends `instructions` after the
+conversation and gives them priority over the user message. Replies use
+`text.verbosity: high`. If you pass a `storage_path`, chat history is written
+to `chat_history.json` in that directory.
 
 !!! Example "Synchronous Version"
     ```python

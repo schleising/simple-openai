@@ -26,6 +26,7 @@ from simple_openai.constants import (
     PROMPT_CACHE_TTL_30M,
     REASONING_EFFORT_LOW,
     REASONING_TYPE,
+    TEXT_VERBOSITY_HIGH,
 )
 
 JsonScalar: TypeAlias = str | int | float | bool | None
@@ -299,6 +300,16 @@ class ChatHistory(BaseModel):
         return {key: deque(items, maxlen=MAX_CHAT_HISTORY) for key, items in value.items()}
 
 
+class TextConfig(BaseModel):
+    """Visible-answer settings for the Responses API
+
+    GPT-6.2 defaults to a shorter style than earlier Sol models. `high`
+    asks for a fuller reply without changing reasoning effort.
+    """
+
+    verbosity: str = TEXT_VERBOSITY_HIGH
+
+
 class ReasoningConfig(BaseModel):
     """Reasoning settings for the Responses API
 
@@ -320,6 +331,7 @@ class ResponsesRequest(BaseModel):
     parallel_tool_calls: bool | None = None
     store: bool = False
     reasoning: ReasoningConfig = Field(default_factory=ReasoningConfig)
+    text: TextConfig = Field(default_factory=TextConfig)
     max_output_tokens: int = MAX_OUTPUT_TOKENS
     prompt_cache_options: PromptCacheOptions = Field(default_factory=PromptCacheOptions)
 
